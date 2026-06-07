@@ -61,7 +61,10 @@ h3{margin:0 0 10px;font-size:20px}
 .dayNum{display:inline;color:#b8aca2;font-size:11px;letter-spacing:0;margin-top:0}
 .dayLine{border-top:1px solid var(--line);margin-top:12px;opacity:.7}
 .plus{color:#c5bbb2;font-size:20px;font-weight:300;line-height:20px;text-align:right}
-.run{grid-column:1/4;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin:6px 0;box-shadow:0 2px 10px rgba(70,45,28,.04);position:relative;overflow:hidden}
+.runSwipe{grid-column:1/4;position:relative;margin:6px 0;border-radius:14px;overflow:hidden}
+.deleteReveal{position:absolute;inset:0 0 0 auto;width:92px;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;opacity:0;transition:opacity .18s ease}.runSwipe.open .deleteReveal{opacity:1}
+.deleteReveal button{width:100%;height:100%;border:0;background:transparent;color:#fff;font:inherit}
+.run{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px;box-shadow:0 2px 10px rgba(70,45,28,.04);position:relative;overflow:hidden;transition:transform .2s ease;touch-action:pan-y}
 .run:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--type,#ddd)}
 .runTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .runDist{font-size:21px;font-weight:850;letter-spacing:-.45px}
@@ -121,7 +124,7 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171717;color:white;padding:12px 16px;border-radius:12px;z-index:80;display:none;max-width:88%;text-align:center}
 .smallText{font-size:12px;color:#8f857d;line-height:1.32;font-style:italic;opacity:.8;margin-top:8px}
 .typeDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--dot)}
-.installHint{font-size:13px;color:rgba(255,255,255,.75);margin-top:8px}.nextMeta{font-size:14px;font-weight:500;opacity:.82;margin-top:4px;line-height:1.35}
+.installHint{font-size:13px;color:rgba(255,255,255,.75);margin-top:8px}.nextMeta{font-size:14px;font-weight:500;opacity:.82;margin-top:4px;line-height:1.35}.nextNote{font-size:14px;font-weight:400;font-style:italic;opacity:.72;margin:8px 0 0;line-height:1.35}
 @media(min-width:720px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
 </style>
 </head>
@@ -262,7 +265,12 @@ function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 
 function go(i){view=i;slider.style.transform=`translateX(-${i*50}%)`}
 document.addEventListener("touchstart",e=>startX=e.touches[0].clientX,{passive:true});
-document.addEventListener("touchend",e=>{if(modal.style.display==="flex")return;let dx=e.changedTouches[0].clientX-startX;if(Math.abs(dx)>70)go(dx<0?1:0)},{passive:true});
+document.addEventListener("touchend",e=>{
+  if(modal.style.display==="flex")return;
+  if(e.target.closest(".runSwipe"))return;
+  let dx=e.changedTouches[0].clientX-startX;
+  if(Math.abs(dx)>70)go(dx<0?1:0);
+},{passive:true});
 
 function toggleActionMenu(event){
   event.stopPropagation();
@@ -298,7 +306,7 @@ function renderSchema(){
   const today=startOfDay(new Date());
   const next=all.find(r=>!r.genomfort && parse(r.date)>=today) || all.find(r=>!r.genomfort);
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
-  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${next.distansKm} km</div><div class="nextMeta">${next.type} · ${next.tidMinuter} min · ${next.tempoPerKm}/km</div>${next.anteckning?`<p class="nextMeta">${esc(next.anteckning)}</p>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
+  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${next.distansKm} km</div><div class="nextMeta">${next.type} · ${next.tidMinuter} min · ${next.tempoPerKm}/km</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
   let currentWeek=startOfWeek(today);
   let minDate=showPastWeeks
     ? (all[0]?startOfWeek(parse(all[0].date)):currentWeek)
@@ -329,10 +337,13 @@ function renderSchema(){
 }
 function runCard(r){
   const color=TYPE_COLORS[r.type]||"#bbb";
-  return `<div class="run ${r.genomfort?'done':''}" style="--type:${color}" onclick="editRun(${r.id})">
-    <div class="runTop"><div><span class="runDist">${r.distansKm} km</span></div><button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
-    <div class="meta">${r.type} · ${r.tidMinuter} min · ${r.tempoPerKm}/km</div>
-    ${r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:""}
+  return `<div class="runSwipe" data-id="${r.id}">
+    <div class="deleteReveal"><button onclick="event.stopPropagation();quickDeleteRun(${r.id})">Ta bort</button></div>
+    <div class="run ${r.genomfort?'done':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
+      <div class="runTop"><div><span class="runDist">${r.distansKm} km</span></div><button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
+      <div class="meta">${r.type} · ${r.tidMinuter} min · ${r.tempoPerKm}/km</div>
+      ${r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:""}
+    </div>
   </div>`;
 }
 function renderStats(){
@@ -380,6 +391,13 @@ function saveRun(){
   closeRun();persist();toastMsg("Sparat")
 }
 function deleteRun(){if(!runId.value)return; if(confirm("Ta bort passet?")){state.runs=state.runs.filter(r=>r.id!=runId.value);closeRun();persist();toastMsg("Pass borttaget")}}
+function quickDeleteRun(id){
+  if(confirm("Ta bort passet?")){
+    state.runs=state.runs.filter(r=>r.id!=id);
+    persist();
+    toastMsg("Pass borttaget");
+  }
+}
 function moveFuture(){
   const r=state.runs.find(x=>x.id==runId.value); if(!r||!moveDate.value)return;
   const old=parse(r.date),nu=parse(moveDate.value); const diff=Math.round((nu-old)/86400000);
@@ -431,6 +449,60 @@ function importData(e){
 }
 function resetDemo(){if(confirm("Återställ exempeldata? Nuvarande data skrivs över.")){state=demoState();persist();toastMsg("Återställt")}}
 function toastMsg(t){toast.textContent=t;toast.style.display="block";clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display="none",1900)}
+
+
+let swipeItem=null,swipeStartX=0,swipeStartY=0,swipeDX=0,swipeOpenId=null;
+document.addEventListener("touchstart",e=>{
+  const run=e.target.closest(".run");
+  if(!run || modal.style.display==="flex")return;
+  swipeItem=run;
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+  swipeDX=0;
+},{passive:true});
+document.addEventListener("touchmove",e=>{
+  if(!swipeItem)return;
+  const dx=e.touches[0].clientX-swipeStartX;
+  const dy=e.touches[0].clientY-swipeStartY;
+  if(Math.abs(dy)>Math.abs(dx))return;
+  if(dx<0){
+    swipeDX=Math.max(dx,-92);
+    swipeItem.style.transform=`translateX(${swipeDX}px)`;
+    e.preventDefault();
+  }else if(dx>0 && swipeOpenId && swipeItem.dataset.runId==swipeOpenId){
+    swipeDX=Math.min(-92+dx,0);
+    swipeItem.style.transform=`translateX(${swipeDX}px)`;
+    e.preventDefault();
+  }
+},{passive:false});
+document.addEventListener("touchend",()=>{
+  if(!swipeItem)return;
+  const id=swipeItem.dataset.runId;
+  document.querySelectorAll(".run").forEach(el=>{
+    if(el!==swipeItem)el.style.transform="translateX(0)";
+  });
+  document.querySelectorAll(".runSwipe").forEach(w=>{
+    if(w.dataset.id!==id)w.classList.remove("open");
+  });
+  if(swipeDX<-45){
+    swipeItem.style.transform="translateX(-92px)";
+    swipeItem.closest(".runSwipe").classList.add("open");
+    swipeOpenId=id;
+  }else{
+    swipeItem.style.transform="translateX(0)";
+    swipeItem.closest(".runSwipe").classList.remove("open");
+    if(swipeOpenId===id)swipeOpenId=null;
+  }
+  swipeItem=null;
+  swipeDX=0;
+},{passive:true});
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".runSwipe")){
+    document.querySelectorAll(".run").forEach(el=>el.style.transform="translateX(0)");
+    document.querySelectorAll(".runSwipe").forEach(w=>w.classList.remove("open"));
+    swipeOpenId=null;
+  }
+});
 
 let modalStartY=0,modalCurrentY=0,modalDragging=false;
 sheet.addEventListener("touchstart",e=>{
