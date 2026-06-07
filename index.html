@@ -267,6 +267,16 @@ function fmtDate(s){return parse(s).toLocaleDateString("sv-SE",{day:"numeric",mo
 function shortDate(s){return parse(s).toLocaleDateString("sv-SE",{day:"numeric",month:"short"})}
 function weekday(d){return ["MÅN","TIS","ONS","TORS","FRE","LÖR","SÖN"][(d.getDay()+6)%7]}
 function paceFrom(km,min){if(!km||!min)return"";let p=min/km,m=Math.floor(p),sec=Math.round((p-m)*60);if(sec===60){m++;sec=0}return m+":"+String(sec).padStart(2,"0")}
+
+function formatDuration(mins){
+  mins=Number(mins||0);
+  if(mins<60) return `${mins} min`;
+  const h=Math.floor(mins/60);
+  const m=mins%60;
+  if(m===0) return `${h} h`;
+  return `${h} h ${String(m).padStart(2,"0")} min`;
+}
+
 function minsFrom(km,pace){let p=parsePace(pace);return km&&p?Math.round(km*p):0}
 function parsePace(p){if(!p)return 0;let [m,s="0"]=String(p).trim().replace(",",":").replace(".",":").replace(";",":").split(":");return Number(m)+Number(s)/60}
 function sum(a,k){return a.reduce((s,r)=>s+Number(r[k]||0),0)}
@@ -315,7 +325,7 @@ function renderSchema(){
   const today=startOfDay(new Date());
   const next=all.find(r=>!r.genomfort && parse(r.date)>=today) || all.find(r=>!r.genomfort);
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
-  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${next.distansKm} km</div><div class="nextMeta">${next.type} · ${next.tidMinuter} min · ${next.tempoPerKm}/km</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
+  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${next.distansKm} km</div><div class="nextMeta">${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
   let currentWeek=startOfWeek(today);
   let minDate=showPastWeeks
     ? (all[0]?startOfWeek(parse(all[0].date)):currentWeek)
@@ -350,7 +360,7 @@ function runCard(r){
     <div class="deleteReveal"><button onclick="event.stopPropagation();quickDeleteRun(${r.id})">Ta bort</button></div>
     <div class="run ${r.genomfort?'done':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
       <div class="runTop"><div><span class="runDist">${r.distansKm} km</span></div><button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
-      <div class="meta">${r.type} · ${r.tidMinuter} min · ${r.tempoPerKm}/km</div>
+      <div class="meta">${r.type} · ${formatDuration(r.tidMinuter)} · ${r.tempoPerKm}/km</div>
       ${r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:""}
     </div>
   </div>`;
