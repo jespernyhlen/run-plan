@@ -46,13 +46,20 @@ h3{margin:0 0 10px;font-size:20px}
 .btn.secondary{background:var(--soft);color:var(--ink);box-shadow:none}
 .btn.ghost{background:transparent;color:var(--muted);box-shadow:none}
 .btn.danger{background:transparent;color:var(--danger);box-shadow:none}
+.backupBox{padding-top:2px}
+.backupHint{font-size:13px;color:var(--muted);line-height:1.4;font-style:italic;opacity:.85;margin:10px 0 16px}
+.backupActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
+.backupActions .btn{width:100%;background:var(--soft);color:var(--ink)}
+.textAction{width:100%;background:none;border:0;padding:13px 0;color:var(--muted);font-size:14px;font-weight:400;text-align:left}
+.textAction.danger{color:var(--danger)}
+.actionDivider{border:0;border-top:1px solid var(--line);margin:14px 0 10px}
 .btn.small{padding:8px 12px;font-size:13px}
 .fab{position:fixed;right:20px;bottom:22px;z-index:30;width:62px;height:62px;border-radius:50%;font-size:32px;padding:0;display:grid;place-items:center}
 .quick{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;margin:0 -3px}
 .quick .btn{white-space:nowrap}
 .week{margin-top:22px;scroll-margin-top:88px}
-.weekHead{display:flex;align-items:end;justify-content:space-between;margin:0 2px 10px}
-.weekTitle{font-size:18px;font-weight:800;letter-spacing:-.25px}
+.weekHead{display:flex;align-items:flex-start;justify-content:space-between;margin:0 2px 10px}
+.weekTitle{font-size:18px;font-weight:800;letter-spacing:-.25px}.weekTitleRow{display:flex;align-items:baseline;gap:10px}.weekRange{color:var(--muted);font-size:12px;opacity:.75;font-weight:500}
 .weekRange{color:var(--muted);font-size:12px}
 .weekMeta{font-size:12px;color:var(--muted);font-weight:800}
 .day{display:grid;grid-template-columns:78px 1fr 28px;gap:8px;align-items:start;margin:10px 0}
@@ -120,7 +127,7 @@ textarea{min-height:88px;resize:vertical}
 .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .actions{display:flex;gap:10px;margin-top:20px}.actions .btn{flex:1}.moveRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.moveRow .btn{white-space:nowrap}
 hr{border:0;border-top:1px solid var(--line);margin:24px 0}
-.goalEdit,.backupBox{display:none}
+.goalEdit,.backupBox{display:none}.goalActions{margin-top:18px}
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#171717;color:white;padding:12px 16px;border-radius:12px;z-index:80;display:none;max-width:88%;text-align:center}
 .smallText{font-size:12px;color:#8f857d;line-height:1.32;font-style:italic;opacity:.8;margin-top:8px}
 .typeDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--dot)}
@@ -161,19 +168,21 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
       <div class="card goalEdit" id="goalEdit">
         <label>Målnamn</label><input id="goalName">
         <label>Måldatum</label><input id="goalDate" type="date">
-        <button class="btn" onclick="saveGoal()">Spara mål</button>
+        <div class="goalActions"><button class="btn" onclick="saveGoal()">Spara mål</button></div>
       </div>
       <div id="stats"></div>
       <div class="card">
         <div class="row"><div><div class="eyebrow">Data</div><h3>Backup & återställning</h3></div><button class="btn secondary" onclick="toggleBackup()">Visa</button></div>
         <div class="backupBox" id="backupBox">
-          <p class="smallText">Exportera innan större ändringar. Import ersätter nuvarande data.</p>
-          <div class="actions">
+          <p class="backupHint">Exportera innan större ändringar. Import ersätter nuvarande data.</p>
+          <div class="backupActions">
             <button class="btn secondary" onclick="exportData()">Exportera</button>
             <button class="btn secondary" onclick="document.getElementById('importFile').click()">Importera</button>
           </div>
           <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
-          <button class="btn danger" onclick="resetDemo()">Återställ exempeldata</button>
+          <button class="textAction danger" onclick="clearAllData()">Rensa all data</button>
+          <hr class="actionDivider">
+          <button class="textAction" onclick="resetDemo()">Återställ exempeldata</button>
         </div>
       </div>
     </section>
@@ -193,7 +202,7 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
       <div><label>Distans km</label><input id="km" type="number" step=".1" inputmode="decimal"></div>
       <div><label>Tid min</label><input id="mins" type="number" inputmode="numeric"></div>
     </div>
-    <label>Tempo min/km</label><input id="pace" placeholder="T.ex. 5:30" inputmode="numeric">
+    <label>Tempo min/km</label><input id="pace" placeholder="T.ex. 7:30" inputmode="text" autocomplete="off">
     <label>Anteckningar</label><textarea id="note" placeholder="Ex. 6 × 1000 m, lugn jogg, känsla..."></textarea>
     <div class="actions"><button class="btn" onclick="saveRun()">Spara</button></div>
     <div style="display:flex;justify-content:center;margin-top:8px"><button id="deleteBtn" class="btn danger" style="flex:none" onclick="deleteRun()">Ta bort pass</button></div>
@@ -259,7 +268,7 @@ function shortDate(s){return parse(s).toLocaleDateString("sv-SE",{day:"numeric",
 function weekday(d){return ["MÅN","TIS","ONS","TORS","FRE","LÖR","SÖN"][(d.getDay()+6)%7]}
 function paceFrom(km,min){if(!km||!min)return"";let p=min/km,m=Math.floor(p),sec=Math.round((p-m)*60);if(sec===60){m++;sec=0}return m+":"+String(sec).padStart(2,"0")}
 function minsFrom(km,pace){let p=parsePace(pace);return km&&p?Math.round(km*p):0}
-function parsePace(p){if(!p)return 0;let [m,s="0"]=String(p).replace(",",".").split(":");return Number(m)+Number(s)/60}
+function parsePace(p){if(!p)return 0;let [m,s="0"]=String(p).trim().replace(",",":").replace(".",":").replace(";",":").split(":");return Number(m)+Number(s)/60}
 function sum(a,k){return a.reduce((s,r)=>s+Number(r[k]||0),0)}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 
@@ -324,7 +333,7 @@ function renderSchema(){
     let days=[0,1,2,3,4,5,6].map(n=>addDays(w,n));
     let weekRuns=all.filter(r=>parse(r.date)>=days[0]&&parse(r.date)<=days[6]);
     let weekKm=sum(weekRuns,"distansKm");
-    html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitle">Vecka ${weekNo(w)}</div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
+    html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitleRow"><div class="weekTitle">Vecka ${weekNo(w)}</div><div class="weekRange">${shortDate(iso(days[0]))}–${shortDate(iso(days[6]))}</div></div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
     days.forEach(d=>{
       let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
       html+=`<div class="day"><div class="dayName ${isToday?'today':''}">${weekday(d)}<span class="dayNum">${d.getDate()}</span></div><div class="dayLine"></div><div class="plus" onclick="openRun('${ds}')">+</div>`;
@@ -347,21 +356,40 @@ function runCard(r){
   </div>`;
 }
 function renderStats(){
-  const runs=state.runs,done=runs.filter(r=>r.genomfort),left=runs.filter(r=>!r.genomfort);
-  const pct=runs.length?Math.round(done.length/runs.length*100):0;
-  const days=Math.max(0,Math.ceil((parse(state.goal.date)-startOfDay(new Date()))/86400000));
-  goalCard.innerHTML=`<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">${esc(state.goal.name)}</div><div style="font-size:21px">${fmtDate(state.goal.date)}</div><div class="row" style="margin-top:22px"><div class="big" style="font-size:34px">${days} d kvar</div><button class="btn secondary" onclick="toggleGoal()">Ändra</button></div>`;
-  goalName.value=state.goal.name;goalDate.value=state.goal.date;
-  let weekKm={};runs.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+Number(r.distansKm||0)});
+  const today=startOfDay(new Date());
+  const runs=state.runs;
+  const upcoming=runs.filter(r=>!r.genomfort && parse(r.date)>=today);
+  const future=upcoming.length ? upcoming : runs.filter(r=>!r.genomfort);
+  const hasGoal=state.goal&&state.goal.name&&state.goal.date;
+  const days=hasGoal?Math.max(0,Math.ceil((parse(state.goal.date)-today)/86400000)):null;
+  goalCard.innerHTML=hasGoal
+    ? `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">${esc(state.goal.name)}</div><div style="font-size:21px">${fmtDate(state.goal.date)}</div><div class="row" style="margin-top:22px"><div class="big" style="font-size:34px">${days} d kvar</div><button class="btn secondary" onclick="toggleGoal()">Ändra</button></div>`
+    : `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">Inget mål valt</div><div class="nextMeta" style="opacity:.78;margin-top:8px">Lägg till ett lopp eller mål att träna mot.</div><div class="row" style="margin-top:22px"><button class="btn secondary" onclick="toggleGoal()">Lägg till mål</button></div>`;
+  goalName.value=state.goal.name||"";goalDate.value=state.goal.date||"";
+
+  let weekKm={};
+  future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+Number(r.distansKm||0)});
   let entries=Object.entries(weekKm).sort();
   let max=Math.max(20,...entries.map(e=>e[1]));
-  let bars=entries.map(([k,v])=>{let now=iso(startOfWeek(new Date()))===k;return `<div class="barWrap"><div class="bar"><div class="barIn ${now?'now':''}" style="height:${Math.max(10,v/max*116)}px"><span class="barVal">${Math.round(v)}</span></div></div><div>${now?'Nu':shortDate(k)}</div></div>`}).join("");
-  let types={};left.forEach(r=>types[r.type]=(types[r.type]||0)+1);
+  let bars=entries.map(([k,v],i)=>{
+    return `<div class="barWrap"><div class="bar"><div class="barIn ${i===0?'now':''}" style="height:${Math.max(10,v/max*116)}px"><span class="barVal">${Math.round(v)}</span></div></div><div>${i===0?'Nästa':shortDate(k)}</div></div>`
+  }).join("");
+
+  let types={};
+  future.forEach(r=>types[r.type]=(types[r.type]||0)+1);
+
+  const next=future[0];
   stats.innerHTML=`
-    <div class="card row"><div class="progressRing" style="--p:${pct}%"><div class="ringInner">${pct}%<br><span class="smallText">${done.length}/${runs.length}</span></div></div><div style="flex:1"><div class="eyebrow">Genomförda pass</div><div class="big" style="font-size:35px">${done.length}</div><div class="smallText">${left.length} återstår</div></div></div>
-    <div class="grid2"><div class="card"><div class="eyebrow">Avklarat</div><div class="big">${sum(done,'distansKm').toFixed(0)}</div><div class="sub">km</div></div><div class="card"><div class="eyebrow">Kvar</div><div class="big">${sum(left,'distansKm').toFixed(0)}</div><div class="sub">km</div></div></div>
-    <div class="grid2"><div class="card"><div class="eyebrow">Tid klar</div><div class="big">${(sum(done,'tidMinuter')/60).toFixed(1)}</div><div class="sub">timmar</div></div><div class="card"><div class="eyebrow">Tid kvar</div><div class="big">${(sum(left,'tidMinuter')/60).toFixed(1)}</div><div class="sub">timmar</div></div></div>
-    <div class="card"><div class="eyebrow">Planerad volym per vecka</div><div class="bars">${bars}</div></div>
+    <div class="card">
+      <div class="eyebrow">Planerat framåt</div>
+      <div class="big" style="font-size:35px">${future.length}</div>
+      <div class="sub">kommande pass${next?` · nästa ${fmtDate(next.date)}`:""}</div>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="eyebrow">Planerat</div><div class="big">${sum(future,'distansKm').toFixed(0)}</div><div class="sub">km framåt</div></div>
+      <div class="card"><div class="eyebrow">Tid</div><div class="big">${(sum(future,'tidMinuter')/60).toFixed(1)}</div><div class="sub">timmar framåt</div></div>
+    </div>
+    <div class="card"><div class="eyebrow">Planerad volym per vecka</div><div class="bars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div></div>
     <div class="card"><div class="eyebrow">Kommande passtyper</div>${Object.entries(types).map(([k,v])=>`<div class="listLine"><span><span class="typeDot" style="--dot:${TYPE_COLORS[k]||'#bbb'}"></span><b>${k}</b></span><span>${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}</div>`;
 }
 
@@ -435,7 +463,7 @@ function copyCurrentWeek(){
   persist();toastMsg("Vecka kopierad")
 }
 function toggleGoal(){goalEdit.style.display=goalEdit.style.display==="block"?"none":"block"}
-function saveGoal(){state.goal={name:goalName.value||"Mitt mål",date:goalDate.value||iso(new Date())};goalEdit.style.display="none";persist();toastMsg("Mål sparat")}
+function saveGoal(){state.goal={name:goalName.value.trim(),date:goalDate.value};goalEdit.style.display="none";persist();toastMsg("Mål sparat")}
 function toggleBackup(){backupBox.style.display=backupBox.style.display==="block"?"none":"block"}
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
@@ -446,6 +474,15 @@ function importData(e){
   const reader=new FileReader();
   reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!data.runs||!data.goal)throw Error(); if(confirm("Importera och ersätt nuvarande data?")){state=data;persist();toastMsg("Importerad")}}catch{toastMsg("Kunde inte läsa filen")}};
   reader.readAsText(f); e.target.value="";
+}
+function clearAllData(){
+  if(!confirm("Ta bort all träningsdata? Detta går inte att ångra.")) return;
+  state={
+    goal:{name:"",date:""},
+    runs:[]
+  };
+  persist();
+  toastMsg("All data raderad");
 }
 function resetDemo(){if(confirm("Återställ exempeldata? Nuvarande data skrivs över.")){state=demoState();persist();toastMsg("Återställt")}}
 function toastMsg(t){toast.textContent=t;toast.style.display="block";clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display="none",1900)}
