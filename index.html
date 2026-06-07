@@ -1,162 +1,240 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Löpschema</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Löpschema Prototyp</title>
 <style>
-body{font-family:system-ui,sans-serif;margin:0;background:#f7f4ef;color:#2f2723}
-.header{padding:20px;font-size:36px;font-weight:700}
-.tabs{display:flex;position:sticky;top:0;background:#f7f4ef}
-.tab{flex:1;padding:14px;border:none;background:none;font-size:16px}
-.active{border-bottom:3px solid #c46049}
-.page{padding:16px}
-.card{background:white;border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.primary{background:#c46049;color:white}
-.run{padding:12px;border-radius:14px;background:white;margin:8px 0}
-.done{opacity:.5;text-decoration:line-through}
-button{background:#c46049;color:white;border:none;border-radius:12px;padding:10px 14px}
+body{margin:0;font-family:system-ui;background:#f7f4ef;color:#2e2722}
+.container{display:flex;width:200vw;transition:.35s transform}
+.view{width:100vw;min-height:100vh;padding:16px;box-sizing:border-box}
+.card{background:#fff;border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.hero{background:#c46049;color:#fff}
+.topnav{position:sticky;top:0;background:#f7f4ef;padding:10px;display:flex;gap:10px;z-index:10}
+button{border:none;background:#c46049;color:white;padding:12px 16px;border-radius:12px}
 input,select,textarea{width:100%;padding:10px;margin:6px 0;box-sizing:border-box}
-.hidden{display:none}
+.day{margin:10px 0}
+.run{background:white;border-radius:14px;padding:10px;margin:6px 0}
+.done{opacity:.55;text-decoration:line-through}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center}
+.modalContent{background:white;width:92%;max-height:90vh;overflow:auto;padding:16px;border-radius:18px}
+.bar{height:20px;background:#ead9d2;border-radius:10px;overflow:hidden}
+.fill{height:100%;background:#c46049}
+.small{font-size:.9em;color:#666}
 </style>
 </head>
 <body>
-<div class="header">Löpschema</div>
-<div class="tabs">
-<button class="tab active" onclick="showPage('schema',this)">Schema</button>
-<button class="tab" onclick="showPage('stats',this)">Statistik</button>
+<div class="topnav">
+<button onclick="gotoView(0)">Schema</button>
+<button onclick="gotoView(1)">Statistik</button>
+<button onclick="newRun()">+ Pass</button>
 </div>
 
-<div id="schema" class="page">
-<div id="nextRun"></div>
+<div id="pages" class="container">
+<section class="view">
+<h1>Veckoschema</h1>
+<div id="next"></div>
+<div id="weeks"></div>
+</section>
 
-<div class="card">
-<h3>Nytt pass</h3>
-<input type="date" id="date">
+<section class="view">
+<h1>Planering</h1>
+<div class="card hero">
+<div id="goalBox"></div>
+</div>
+<div class="card" id="progressBox"></div>
+<div class="card" id="volumeBox"></div>
+<div class="card" id="typesBox"></div>
+</section>
+</div>
+
+<div class="modal" id="modal">
+<div class="modalContent">
+<h2 id="modalTitle">Pass</h2>
+<input type="hidden" id="rid">
+<label>Datum</label><input id="date" type="date">
+<label>Typ</label>
 <select id="type">
-<option>Distanspass</option>
-<option>Intervaller</option>
-<option>Tröskelpass</option>
-<option>Långpass</option>
-<option>Återhämtning</option>
-<option>Tävling</option>
+<option>Distanspass</option><option>Intervaller</option>
+<option>Tröskelpass</option><option>Långpass</option>
+<option>Återhämtning</option><option>Tävling</option>
 </select>
-<input type="number" id="km" placeholder="Distans km">
-<input type="number" id="min" placeholder="Tid minuter">
-<textarea id="note" placeholder="Anteckning"></textarea>
-<button onclick="addRun()">Lägg till pass</button>
+<label>Distans km</label><input id="km" type="number" step="0.1">
+<label>Tid minuter</label><input id="mins" type="number">
+<label>Tempo mm:ss/km</label><input id="pace">
+<label>Anteckning</label><textarea id="note"></textarea>
+<button onclick="saveRun()">Spara</button>
+<button onclick="deleteRun()">Ta bort</button>
+<hr>
+<h3>Flytta detta pass och alla efterföljande</h3>
+<input type="date" id="moveDate">
+<button onclick="moveFuture()">Flytta framtida pass</button>
+<button onclick="closeModal()">Stäng</button>
 </div>
-
-<div id="runs"></div>
-</div>
-
-<div id="stats" class="page hidden">
-<div class="card">
-<h2>Mål</h2>
-<input id="goalName" placeholder="Målnamn">
-<input id="goalDate" type="date">
-<button onclick="saveGoal()">Spara mål</button>
-</div>
-<div class="card" id="statsBox"></div>
 </div>
 
 <script>
-let runs=JSON.parse(localStorage.getItem('runs')||'[]');
-let goal=JSON.parse(localStorage.getItem('goal')||'{"name":"Stockholm Marathon","date":"2026-06-01"}');
+let current=0;
+function gotoView(i){current=i;pages.style.transform=`translateX(-${i*100}vw)`}
+let startX=0;
+document.addEventListener('touchstart',e=>startX=e.touches[0].clientX);
+document.addEventListener('touchend',e=>{
+ let d=e.changedTouches[0].clientX-startX;
+ if(d<-50) gotoView(1);
+ if(d>50) gotoView(0);
+});
 
-if(runs.length===0){
-runs=[
-{id:1,date:"2026-06-01",type:"Distanspass",km:8,min:45,note:"",done:false},
-{id:2,date:"2026-06-04",type:"Intervaller",km:10,min:55,note:"",done:false},
-{id:3,date:"2026-06-07",type:"Långpass",km:18,min:110,note:"",done:false}
-];
-save();
+let goal=JSON.parse(localStorage.goal||'{"name":"Stockholm Marathon","date":"2026-10-10"}');
+let runs=JSON.parse(localStorage.runs||'[]');
+
+if(!runs.length){
+ let base=new Date();
+ for(let i=0;i<24;i++){
+  let d=new Date(base); d.setDate(d.getDate()+i*3);
+  runs.push({id:Date.now()+i,date:d.toISOString().slice(0,10),type:i%4==0?'Långpass':'Distanspass',distansKm:8+i%10,tidMinuter:45+i,tempoPerKm:"5:30",anteckning:"",genomfort:false});
+ }
+ save();
 }
 
 function save(){
-localStorage.setItem('runs',JSON.stringify(runs));
-localStorage.setItem('goal',JSON.stringify(goal));
-render();
-}
-
-function addRun(){
-runs.push({
-id:Date.now(),
-date:date.value,
-type:type.value,
-km:Number(km.value||0),
-min:Number(min.value||0),
-note:note.value,
-done:false
-});
-save();
-}
-
-function toggle(id){
-let r=runs.find(x=>x.id===id);
-r.done=!r.done;
-save();
-}
-
-function removeRun(id){
-runs=runs.filter(x=>x.id!==id);
-save();
+ localStorage.runs=JSON.stringify(runs);
+ localStorage.goal=JSON.stringify(goal);
+ render();
 }
 
 function render(){
-runs.sort((a,b)=>a.date.localeCompare(b.date));
+ runs.sort((a,b)=>a.date.localeCompare(b.date));
+ let nextRun=runs.find(r=>!r.genomfort);
+ next.innerHTML=nextRun?`<div class="card hero"><h3>Nästa pass</h3>${nextRun.type}<br>${nextRun.distansKm} km • ${nextRun.tidMinuter} min • ${nextRun.tempoPerKm}<br>${nextRun.date}</div>`:'';
 
-const future=runs.filter(r=>!r.done);
-const next=future[0];
+ let weeksHtml='';
+ let grouped={};
+ runs.forEach(r=>{
+   let w=getWeek(r.date);
+   grouped[w]=grouped[w]||[];
+   grouped[w].push(r);
+ });
+ Object.keys(grouped).sort().forEach(w=>{
+   weeksHtml+=`<div class="card"><h3>Vecka ${w}</h3>`;
+   grouped[w].forEach(r=>{
+      weeksHtml+=`<div class="run ${r.genomfort?'done':''}" onclick="editRun(${r.id})">
+      ${r.date} • <b>${r.type}</b><br>${r.distansKm} km • ${r.tidMinuter} min • ${r.tempoPerKm}
+      <div><button onclick="event.stopPropagation();toggle(${r.id})">✓</button></div>
+      </div>`;
+   });
+   weeksHtml+='</div>';
+ });
+ weeks.innerHTML=weeksHtml;
 
-nextRun.innerHTML=next?`
-<div class="card primary">
-<h3>Nästa pass</h3>
-<div><b>${next.type}</b></div>
-<div>${next.km} km • ${next.min} min</div>
-<div>${next.date}</div>
-</div>`:"";
+ let done=runs.filter(x=>x.genomfort);
+ let left=runs.filter(x=>!x.genomfort);
+ let pct=runs.length?Math.round(done.length/runs.length*100):0;
 
-runsDiv='';
-runs.forEach(r=>{
-runsDiv+=`
-<div class="run ${r.done?'done':''}">
-<b>${r.type}</b><br>
-${r.date}<br>
-${r.km} km • ${r.min} min<br>
-<button onclick="toggle(${r.id})">${r.done?'Ångra':'Klar'}</button>
-<button onclick="removeRun(${r.id})">Ta bort</button>
-</div>`;
-});
-document.getElementById('runs').innerHTML=runsDiv;
+ let days=Math.ceil((new Date(goal.date)-new Date())/86400000);
+ goalBox.innerHTML=`<h2>${goal.name}</h2><div>${goal.date}</div><div>${days} dagar kvar</div>`;
 
-goalName.value=goal.name;
-goalDate.value=goal.date;
+ progressBox.innerHTML=`
+ <h3>Progress</h3>
+ ${done.length}/${runs.length} pass
+ <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+ <p>Avklarade km: ${sum(done,'distansKm').toFixed(1)}</p>
+ <p>Kvarvarande km: ${sum(left,'distansKm').toFixed(1)}</p>
+ <p>Avklarade timmar: ${(sum(done,'tidMinuter')/60).toFixed(1)}</p>
+ `;
 
-const done=runs.filter(r=>r.done).length;
-const left=runs.length-done;
-const kmDone=runs.filter(r=>r.done).reduce((a,b)=>a+b.km,0);
-const kmLeft=runs.filter(r=>!r.done).reduce((a,b)=>a+b.km,0);
+ let weekKm={};
+ runs.forEach(r=>{
+  let w=getWeek(r.date);
+  weekKm[w]=(weekKm[w]||0)+Number(r.distansKm||0);
+ });
+ volumeBox.innerHTML='<h3>Veckovolym</h3>'+Object.entries(weekKm).slice(0,6).map(([w,v])=>
+ `<div>Vecka ${w}: ${v.toFixed(0)} km<div class="bar"><div class="fill" style="width:${Math.min(v,100)}%"></div></div></div>`).join('');
 
-statsBox.innerHTML=`
-<p><b>${goal.name}</b></p>
-<p>Måldatum: ${goal.date}</p>
-<p>Genomförda pass: ${done}</p>
-<p>Kvarvarande pass: ${left}</p>
-<p>Avklarade km: ${kmDone}</p>
-<p>Kvarvarande km: ${kmLeft}</p>`;
+ let types={};
+ left.forEach(r=>types[r.type]=(types[r.type]||0)+1);
+ typesBox.innerHTML='<h3>Kommande passtyper</h3>'+Object.entries(types).map(([k,v])=>`<p>${k}: ${v}</p>`).join('');
 }
 
-function saveGoal(){
-goal={name:goalName.value,date:goalDate.value};
-save();
+function sum(arr,key){return arr.reduce((a,b)=>a+Number(b[key]||0),0)}
+
+function getWeek(d){
+ let date=new Date(d);
+ date.setHours(0,0,0,0);
+ date.setDate(date.getDate()+3-(date.getDay()+6)%7);
+ let week1=new Date(date.getFullYear(),0,4);
+ return 1+Math.round(((date-week1)/86400000-3+(week1.getDay()+6)%7)/7);
 }
 
-function showPage(id,btn){
-document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));
-document.getElementById(id).classList.remove('hidden');
-document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-btn.classList.add('active');
+function toggle(id){let r=runs.find(x=>x.id==id);r.genomfort=!r.genomfort;save();}
+
+function newRun(){
+ rid.value=''; date.value=''; km.value=''; mins.value=''; pace.value=''; note.value='';
+ modal.style.display='flex';
+}
+
+function editRun(id){
+ let r=runs.find(x=>x.id==id);
+ rid.value=r.id; date.value=r.date; type.value=r.type;
+ km.value=r.distansKm; mins.value=r.tidMinuter; pace.value=r.tempoPerKm; note.value=r.anteckning;
+ moveDate.value=r.date;
+ modal.style.display='flex';
+}
+
+function closeModal(){modal.style.display='none';}
+
+function calc(){
+ let d=parseFloat(km.value);
+ let t=parseFloat(mins.value);
+ if(d&&t) {
+   let p=t/d;
+   let m=Math.floor(p), s=Math.round((p-m)*60);
+   pace.value=`${m}:${String(s).padStart(2,'0')}`;
+ }
+}
+km.onchange=calc; mins.onchange=calc;
+
+function saveRun(){
+ let id=rid.value;
+ if(id){
+  let r=runs.find(x=>x.id==id);
+  Object.assign(r,dataObj());
+ }else{
+  runs.push({...dataObj(),id:Date.now(),genomfort:false});
+ }
+ closeModal(); save();
+}
+
+function dataObj(){
+ return {
+ date:date.value,type:type.value,
+ distansKm:Number(km.value||0),
+ tidMinuter:Number(mins.value||0),
+ tempoPerKm:pace.value,
+ anteckning:note.value
+ };
+}
+
+function deleteRun(){
+ if(!rid.value)return;
+ runs=runs.filter(x=>x.id!=rid.value);
+ closeModal(); save();
+}
+
+function moveFuture(){
+ let id=Number(rid.value);
+ let currentRun=runs.find(x=>x.id===id);
+ if(!currentRun) return;
+ let oldDate=new Date(currentRun.date);
+ let newDate=new Date(moveDate.value);
+ let diff=Math.round((newDate-oldDate)/86400000);
+ let affected=runs.filter(r=>new Date(r.date)>=oldDate);
+ if(!confirm(`Flytta ${affected.length} framtida pass ${diff} dagar?`)) return;
+ affected.forEach(r=>{
+   let d=new Date(r.date);
+   d.setDate(d.getDate()+diff);
+   r.date=d.toISOString().slice(0,10);
+ });
+ closeModal(); save();
 }
 
 render();
