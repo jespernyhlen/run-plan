@@ -133,6 +133,132 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 .typeDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--dot)}
 .installHint{font-size:13px;color:rgba(255,255,255,.75);margin-top:8px}.nextMeta{font-size:14px;font-weight:500;opacity:.82;margin-top:4px;line-height:1.35}.nextNote{font-size:14px;font-weight:400;font-style:italic;opacity:.72;margin:8px 0 0;line-height:1.35}
 @media(min-width:720px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+
+/* --- Statistics layout polish v46b --- */
+.statsOverview{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin:12px 0;
+}
+.statsOverview .statMini:first-child{
+  grid-column:1 / -1;
+}
+.statMini{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.statMini .eyebrow{
+  margin-bottom:10px;
+}
+.statNumber{
+  font-size:42px;
+  line-height:.95;
+  font-weight:850;
+  letter-spacing:-1.5px;
+  color:var(--ink);
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  white-space:nowrap;
+}
+.statUnit{
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:0;
+  color:var(--muted);
+}
+.statText{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.3;
+}
+.statsOverview .statMini:not(:first-child) .statNumber{
+  font-size:38px;
+}
+.statChart{
+  padding:16px 0 16px 16px;
+  overflow:hidden;
+}
+.statChart .eyebrow{
+  margin-right:16px;
+  margin-bottom:18px;
+}
+.statBars{
+  display:flex;
+  align-items:flex-end;
+  gap:16px;
+  overflow-x:auto;
+  padding:24px 16px 2px 0;
+  scroll-snap-type:x proximity;
+}
+.statBarItem{
+  min-width:50px;
+  text-align:center;
+  color:#8f857d;
+  scroll-snap-align:start;
+}
+.statBarTrack{
+  height:112px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.statBar{
+  width:42px;
+  background:#ecd3ca;
+  border-radius:11px 11px 0 0;
+  position:relative;
+}
+.statBar.current{
+  background:var(--accent);
+}
+.statBarValue{
+  position:absolute;
+  top:-23px;
+  left:0;
+  right:0;
+  font-size:12px;
+  font-weight:750;
+  color:#8f857d;
+}
+.statBarLabel{
+  margin-top:8px;
+  font-size:12px;
+  color:#8f857d;
+  white-space:nowrap;
+}
+.statTypeList{
+  margin-top:6px;
+}
+.statTypeRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 0;
+  border-top:1px solid var(--line);
+  font-size:14px;
+}
+.statTypeRow:first-child{
+  border-top:0;
+}
+.statTypeName{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  color:var(--ink);
+}
+.statTypeCount{
+  color:var(--muted);
+  font-weight:500;
+}
+
 </style>
 </head>
 <body>
@@ -181,8 +307,7 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
           </div>
           <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
           <button class="textAction danger" onclick="clearAllData()">Rensa all data</button>
-          <hr class="actionDivider">
-          <button class="textAction" onclick="resetDemo()">Återställ exempeldata</button>
+
         </div>
       </div>
     </section>
@@ -373,7 +498,13 @@ function renderStats(){
   const hasGoal=state.goal&&state.goal.name&&state.goal.date;
   const days=hasGoal?Math.max(0,Math.ceil((parse(state.goal.date)-today)/86400000)):null;
   goalCard.innerHTML=hasGoal
-    ? `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">${esc(state.goal.name)}</div><div style="font-size:21px">${fmtDate(state.goal.date)}</div><div class="row" style="margin-top:22px"><div class="big" style="font-size:34px">${days} d kvar</div><button class="btn secondary" onclick="toggleGoal()">Ändra</button></div>`
+    ? `<div class="eyebrow">◎ Mål</div>
+       <div class="big" style="font-size:32px;line-height:1.02;margin-top:4px">${esc(state.goal.name)}</div>
+       <div style="font-size:17px;opacity:.88;margin-top:10px">${fmtDate(state.goal.date)}</div>
+       <div class="row" style="margin-top:20px;align-items:center">
+         <div style="font-size:22px;font-weight:700;letter-spacing:-.3px">${days} dagar kvar</div>
+         <button class="btn secondary" onclick="toggleGoal()">Ändra</button>
+       </div>`
     : `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">Inget mål valt</div><div class="nextMeta" style="opacity:.78;margin-top:8px">Lägg till ett lopp eller mål att träna mot.</div><div class="row" style="margin-top:22px"><button class="btn secondary" onclick="toggleGoal()">Lägg till mål</button></div>`;
   goalName.value=state.goal.name||"";goalDate.value=state.goal.date||"";
 
@@ -382,7 +513,7 @@ function renderStats(){
   let entries=Object.entries(weekKm).sort();
   let max=Math.max(20,...entries.map(e=>e[1]));
   let bars=entries.map(([k,v],i)=>{
-    return `<div class="barWrap"><div class="bar"><div class="barIn ${i===0?'now':''}" style="height:${Math.max(10,v/max*116)}px"><span class="barVal">${Math.round(v)}</span></div></div><div>${i===0?'Nästa':shortDate(k)}</div></div>`
+    return `<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===0?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${i===0?'Nästa':shortDate(k)}</div></div>`
   }).join("");
 
   let types={};
@@ -390,17 +521,35 @@ function renderStats(){
 
   const next=future[0];
   stats.innerHTML=`
+    <div class="statsOverview">
+      <div class="statMini">
+        <div class="eyebrow">Planerat framåt</div>
+        <div class="statNumber">${future.length} <span class="statUnit">pass</span></div>
+        <div class="statText">${next?`nästa ${fmtDate(next.date)}`:"kvar"}</div>
+      </div>
+      <div class="statMini">
+        <div class="eyebrow">Distans</div>
+        <div class="statNumber">${sum(future,'distansKm').toFixed(0)} <span class="statUnit">km</span></div>
+        <div class="statText">kvar</div>
+      </div>
+      <div class="statMini">
+        <div class="eyebrow">Tid</div>
+        <div class="statNumber">${(sum(future,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div>
+        <div class="statText">kvar</div>
+      </div>
+    </div>
+
+    <div class="card statChart">
+      <div class="eyebrow">Planerad volym per vecka</div>
+      <div class="statBars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div>
+    </div>
+
     <div class="card">
-      <div class="eyebrow">Planerat framåt</div>
-      <div class="big" style="font-size:35px">${future.length}</div>
-      <div class="sub">kommande pass${next?` · nästa ${fmtDate(next.date)}`:""}</div>
-    </div>
-    <div class="grid2">
-      <div class="card"><div class="eyebrow">Planerat</div><div class="big">${sum(future,'distansKm').toFixed(0)}</div><div class="sub">km framåt</div></div>
-      <div class="card"><div class="eyebrow">Tid</div><div class="big">${(sum(future,'tidMinuter')/60).toFixed(1)}</div><div class="sub">timmar framåt</div></div>
-    </div>
-    <div class="card"><div class="eyebrow">Planerad volym per vecka</div><div class="bars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div></div>
-    <div class="card"><div class="eyebrow">Kommande passtyper</div>${Object.entries(types).map(([k,v])=>`<div class="listLine"><span><span class="typeDot" style="--dot:${TYPE_COLORS[k]||'#bbb'}"></span><b>${k}</b></span><span>${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}</div>`;
+      <div class="eyebrow">Kommande passtyper</div>
+      <div class="statTypeList">
+        ${Object.entries(types).map(([k,v])=>`<div class="statTypeRow"><span class="statTypeName"><span class="typeDot" style="--dot:${TYPE_COLORS[k]||'#bbb'}"></span>${k}</span><span class="statTypeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
+      </div>
+    </div>`;
 }
 
 function showModal(){
@@ -494,7 +643,6 @@ function clearAllData(){
   persist();
   toastMsg("All data raderad");
 }
-function resetDemo(){if(confirm("Återställ exempeldata? Nuvarande data skrivs över.")){state=demoState();persist();toastMsg("Återställt")}}
 function toastMsg(t){toast.textContent=t;toast.style.display="block";clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display="none",1900)}
 
 
