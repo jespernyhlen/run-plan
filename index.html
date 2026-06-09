@@ -740,7 +740,9 @@ body.dark .switch:after{transform:translateX(17px)}
             </button>
             <div class="actionMenu" id="actionMenu">
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
-              <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
+              <button class="actionItem" onclick="syncGarmin();closeActionMenu()">Synka Garmin</button>
+<button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Byt Garmin API-nyckel</button>
+<button class="actionItem themeItem" onclick="toggleDarkMode(event)">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
               </button>
@@ -1225,6 +1227,76 @@ sheet.addEventListener("touchend",()=>{
   modalDragging=false;
   modalCurrentY=0;
 },{passive:true});
+
+
+
+const GARMIN_SYNC_URL="https://garmin-sync-rcr9.onrender.com/garmin/runs";
+
+async function syncGarmin(){
+  let apiKey=localStorage.getItem("garmin.apiKey")||prompt("Ange din Garmin Sync API-nyckel");
+  if(!apiKey) return;
+
+  localStorage.setItem("garmin.apiKey",apiKey);
+  toastMsg("Synkar Garmin...");
+
+  try{
+    const res=await fetch(GARMIN_SYNC_URL,{
+      method:"GET",
+      headers:{ "x-api-key": apiKey }
+    });
+
+    if(!res.ok){
+      let body="";
+      try{ body=await res.text(); }catch{}
+      if(res.status===401){
+        localStorage.removeItem("garmin.apiKey");
+        throw new Error("401 – fel API-nyckel. Försök igen.");
+      }
+      throw new Error(`${res.status} – backendfel${body?`: ${body.slice(0,120)}`:""}`);
+    }
+
+    const garminRuns=await res.json();
+    let matched=0;
+
+    garminRuns.forEach(gr=>{
+      const sameDay=state.runs.filter(r=>!r.genomfort && r.date===gr.date);
+
+      let match=null;
+
+      if(sameDay.length===1){
+        match=sameDay[0];
+      }else if(sameDay.length>1){
+        match=sameDay
+          .slice()
+          .sort((a,b)=>
+            Math.abs((a.distansKm||0)-(gr.distanceKm||0)) -
+            Math.abs((b.distansKm||0)-(gr.distanceKm||0))
+          )[0];
+      }
+
+      if(match){
+        match.genomfort=true;
+        matched++;
+      }
+    });
+
+    persist();
+    toastMsg(`Synk klart • ${matched} pass matchade`);
+  }catch(e){
+    console.error(e);
+    const msg=String(e.message||e);
+    if(msg.includes("Failed to fetch") || msg.includes("NetworkError")){
+      toastMsg("CORS/nätverksfel mot backend");
+    }else{
+      toastMsg(msg);
+    }
+  }
+}
+
+function resetGarminKey(){
+  localStorage.removeItem("garmin.apiKey");
+  toastMsg("Garmin API-nyckel rensad");
+}
 
 
 function applyTheme(){
