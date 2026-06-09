@@ -869,6 +869,206 @@ body.dark .hero .smallText{
   color:rgba(255,255,255,.86) !important;
 }
 
+
+/* --- Swipe delete polish v62 --- */
+.runSwipe{
+  background:var(--danger);
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
+}
+.deleteReveal{
+  border-radius:14px;
+  right:0;
+  top:0;
+  bottom:0;
+  height:100%;
+}
+.deleteReveal button{
+  border-radius:0 14px 14px 0;
+}
+.run{
+  border-radius:14px;
+  z-index:1;
+}
+.runSwipe.open .run{
+  border-top-right-radius:0;
+  border-bottom-right-radius:0;
+}
+body.dark .runSwipe{
+  background:#B44A4A;
+}
+
+
+/* --- Today marker + completed run polish v63 --- */
+.todayPill{
+  display:inline-flex;
+  align-items:center;
+  margin-left:6px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:rgba(63,143,95,.12);
+  color:var(--accent);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+.dayName.today{
+  color:var(--accent);
+}
+.dayNum.today{
+  color:var(--accentDark);
+}
+
+/* Completed pass should feel done, not deleted/error */
+.done{
+  opacity:.74;
+}
+.done .runDist{
+  text-decoration:none;
+}
+.done .check{
+  background:var(--ok);
+  border-color:var(--ok);
+  color:#fff;
+}
+.done .meta{
+  color:var(--muted);
+}
+.done .smallText{
+  opacity:.65;
+}
+body.dark .dayName.today{
+  color:#7EE29B !important;
+}
+body.dark .dayNum.today{
+  color:#FFFFFF !important;
+}
+body.dark .todayPill{
+  background:rgba(126,226,155,.16);
+  color:#7EE29B;
+}
+body.dark .done{
+  opacity:.72;
+}
+body.dark .done .runDist{
+  color:#DDE8E1;
+  text-decoration:none;
+}
+body.dark .done .meta{
+  color:#AAB8B0 !important;
+}
+body.dark .done .smallText{
+  color:#9AA8A0 !important;
+  opacity:.72;
+}
+body.dark .done .check{
+  background:#3F8F5F;
+  border-color:#3F8F5F;
+  color:#fff;
+}
+
+
+/* --- v64 force completed pass green --- */
+.done .check,
+body.dark .done .check{
+  background:#3F8F5F !important;
+  border-color:#3F8F5F !important;
+  color:#fff !important;
+}
+.done .runDist,
+body.dark .done .runDist{
+  text-decoration:none !important;
+}
+
+
+/* --- v65 completed pass background fix --- */
+/* The pink/red came from opacity on the whole card, letting the swipe-delete red background show through. */
+.done,
+body.dark .done{
+  opacity:1 !important;
+}
+
+.done .runDist,
+.done .meta,
+.done .smallText{
+  opacity:.55;
+}
+
+body.dark .done .runDist,
+body.dark .done .meta,
+body.dark .done .smallText{
+  opacity:.62;
+}
+
+.done .runDist,
+body.dark .done .runDist{
+  text-decoration:none !important;
+}
+
+.done .check,
+body.dark .done .check{
+  background:#3F8F5F !important;
+  border-color:#3F8F5F !important;
+  color:#fff !important;
+}
+
+/* Keep completed card background neutral/white instead of red/pink */
+.done.run,
+body.dark .done.run{
+  background:var(--card) !important;
+}
+
+body.dark .done.run{
+  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98)) !important;
+}
+
+
+/* v66 remove strike-through on completed distance */
+.done .runDist,
+body.dark .done .runDist{
+  text-decoration:none !important;
+}
+
+
+/* v67 softer completed styling */
+.done .check,
+body.dark .done .check{
+  background:#7FAE90 !important;
+  border-color:#7FAE90 !important;
+}
+
+.done .runAccent,
+body.dark .done .runAccent{
+  background:#8FBE9F !important;
+}
+
+
+/* v68 force completed accent bar to match checkbox */
+.done .runAccent,
+.done .accent,
+.done .typeAccent,
+body.dark .done .runAccent,
+body.dark .done .accent,
+body.dark .done .typeAccent{
+  background:#7FAE90 !important;
+  border-color:#7FAE90 !important;
+}
+
+
+/* v69 force completed left stripe pseudo-element */
+.done.run:before,
+body.dark .done.run:before{
+  background:#7FAE90 !important;
+}
+
+
+/* v72 solid dark background */
+body.dark{
+  background:#06110F !important;
+}
+
 </style>
 <script>
 (function(){
@@ -1112,8 +1312,8 @@ function renderSchema(){
     ? (all[0]?startOfWeek(parse(all[0].date)):currentWeek)
     : currentWeek;
 
-  let maxDate=all[all.length-1]?startOfWeek(parse(all[all.length-1].date)):addDays(currentWeek,42);
-  maxDate=addDays(maxDate,21);
+  let endOfYear=new Date(today.getFullYear(),11,31);
+  let maxDate=startOfWeek(endOfYear);
 
   const btn=document.getElementById('pastWeeksBtn');
   if(btn){
@@ -1127,7 +1327,7 @@ function renderSchema(){
     html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitleRow"><div class="weekTitle">Vecka ${weekNo(w)}</div><div class="weekRange">${shortDate(iso(days[0]))}–${shortDate(iso(days[6]))}</div></div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
     days.forEach(d=>{
       let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
-      html+=`<div class="day"><div class="dayName ${isToday?'today':''}">${weekday(d)}<span class="dayNum">${d.getDate()}</span></div><div class="dayLine"></div><div class="plus" onclick="openRun('${ds}')">+</div>`;
+      html+=`<div class="day"><div class="dayName ${isToday?'today':''}">${weekday(d)}<span class="dayNum ${isToday?'today':''}">${d.getDate()}</span>${isToday?'<span class="todayPill">Idag</span>':''}</div><div class="dayLine"></div><div class="plus" onclick="openRun('${ds}')">+</div>`;
       if(rs.length){rs.forEach(r=>html+=runCard(r));}
       html+=`</div>`;
     });
