@@ -1069,6 +1069,128 @@ body.dark{
   background:#06110F !important;
 }
 
+
+/* v76 completed pass: match supplied images */
+/* Completed card stays normal, only text/check/accent are softened. */
+.done,
+body.dark .done{
+  opacity:1 !important;
+}
+
+.done.run{
+  background:var(--card) !important;
+}
+
+body.dark .done.run{
+  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98)) !important;
+}
+
+/* Left stripe and checkbox use the same muted green as the reference. */
+.done.run:before,
+body.dark .done.run:before{
+  background:#7FAE90 !important;
+}
+
+.done .check,
+body.dark .done .check{
+  background:#7FAE90 !important;
+  border-color:#7FAE90 !important;
+  color:#fff !important;
+  box-shadow:none !important;
+}
+
+/* Only the km text is struck through. */
+.done .runDist{
+  color:#8F9691 !important;
+  opacity:1 !important;
+  text-decoration:line-through !important;
+  text-decoration-color:#8F9691 !important;
+  text-decoration-thickness:2px;
+}
+
+body.dark .done .runDist{
+  color:#8E9A91 !important;
+  opacity:1 !important;
+  text-decoration:line-through !important;
+  text-decoration-color:#8E9A91 !important;
+  text-decoration-thickness:2px;
+}
+
+/* Metadata is faded, but not struck through. */
+.done .meta,
+.done .smallText{
+  color:#A7ADA8 !important;
+  opacity:1 !important;
+  text-decoration:none !important;
+}
+
+body.dark .done .meta,
+body.dark .done .smallText{
+  color:#89968E !important;
+  opacity:1 !important;
+  text-decoration:none !important;
+}
+
+
+/* v77 darker completed colors in dark mode only */
+body.dark .done.run:before{
+  background:#4F7F61 !important;
+}
+
+body.dark .done .check{
+  background:#4F7F61 !important;
+  border-color:#4F7F61 !important;
+}
+
+
+/* v78 slightly darker completed colors in dark mode */
+body.dark .done.run:before{
+  background:#3F6B50 !important;
+}
+
+body.dark .done .check{
+  background:#3F6B50 !important;
+  border-color:#3F6B50 !important;
+}
+
+
+/* v79 darker completed accent + softer check icon */
+body.dark .done.run:before{
+  background:#345843 !important;
+}
+
+body.dark .done .check{
+  background:#345843 !important;
+  border-color:#345843 !important;
+  color:rgba(255,255,255,.78) !important;
+}
+
+
+/* v80 final completed-card tuning */
+body.dark .done.run:before{
+  background:#2D4D3A !important;
+}
+
+body.dark .done .check{
+  background:#2D4D3A !important;
+  border-color:#2D4D3A !important;
+  color:rgba(255,255,255,.58) !important;
+}
+
+/* completed text slightly dimmer */
+body.dark .done .runDist{
+  color:#7E8982 !important;
+  text-decoration-color:#7E8982 !important;
+}
+
+body.dark .done .meta{
+  color:#7B867F !important;
+}
+
+body.dark .done .smallText{
+  color:#727D77 !important;
+}
+
 </style>
 <script>
 (function(){
