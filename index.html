@@ -1131,8 +1131,7 @@ body.dark .menuSyncIcon{
       document.documentElement.classList.add("dark-preload");
       document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("dark")});
     }
-  }catch(e){
-    setSyncStatus(false);}
+  }catch(e){}
 })();
 </script>
 </head>
@@ -1158,6 +1157,7 @@ body.dark .menuSyncIcon{
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
               </button>
+              <button class="actionItem" onclick="exportSchedulePdf();closeActionMenu()">Exportera PDF</button>
               <div class="menuSectionLabel">Garmin</div>
               <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
               <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
@@ -1601,6 +1601,149 @@ function copyCurrentWeek(){
 function toggleGoal(){goalEdit.style.display=goalEdit.style.display==="block"?"none":"block"}
 function saveGoal(){state.goal={name:goalName.value.trim(),date:goalDate.value};goalEdit.style.display="none";persist();toastMsg("Mål sparat")}
 function toggleBackup(){backupBox.style.display=backupBox.style.display==="block"?"none":"block"}
+
+
+function loadJsPdf(){
+  return new Promise((resolve,reject)=>{
+    if(window.jspdf&&window.jspdf.jsPDF){
+      resolve(window.jspdf.jsPDF);
+      return;
+    }
+    const existing=document.querySelector('script[data-jspdf="true"]');
+    if(existing){
+      existing.addEventListener("load",()=>resolve(window.jspdf.jsPDF));
+      existing.addEventListener("error",reject);
+      return;
+    }
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.dataset.jspdf="true";
+    s.onload=()=>resolve(window.jspdf.jsPDF);
+    s.onerror=()=>reject(new Error("Kunde inte ladda PDF-bibliotek"));
+    document.head.appendChild(s);
+  });
+}
+
+async function exportSchedulePdf(){
+  const today=startOfDay(new Date());
+  const future=state.runs
+    .filter(r=>!r.genomfort && parse(r.date)>=today)
+    .slice()
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
+  if(!future.length){
+    toastMsg("Inga kommande pass att exportera");
+    return;
+  }
+
+  toastMsg("Skapar PDF...");
+
+  try{
+    const jsPDF=await loadJsPdf();
+    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+
+    const pageW=210;
+    const pageH=297;
+    const margin=14;
+    const contentW=pageW-margin*2;
+    let y=18;
+
+    function setText(color="#1D241F"){
+      doc.setTextColor(color);
+    }
+    function newPage(){
+      doc.addPage();
+      y=16;
+    }
+    function ensure(h){
+      if(y+h>pageH-margin) newPage();
+    }
+    function line(text,x,yPos,size=10,style="normal",color="#1D241F"){
+      doc.setFont("helvetica",style);
+      doc.setFontSize(size);
+      doc.setTextColor(color);
+      doc.text(String(text),x,yPos);
+    }
+    function roundedBox(x,yPos,w,h,fill="#FFFFFF",stroke="#E2E9E1",r=3){
+      doc.setFillColor(fill);
+      doc.setDrawColor(stroke);
+      doc.roundedRect(x,yPos,w,h,r,r,"FD");
+    }
+
+    // Header
+    line("Löpschema",margin,y,21,"bold");
+    y+=7;
+    line(`Kommande planerade pass från ${fmtDate(iso(today))}`,margin,y,9,"normal","#6F7A72");
+    y+=11;
+
+    const byWeek={};
+    future.forEach(r=>{
+      const key=iso(startOfWeek(parse(r.date)));
+      if(!byWeek[key]) byWeek[key]=[];
+      byWeek[key].push(r);
+    });
+
+    Object.entries(byWeek).sort().forEach(([weekStart,runs])=>{
+      const start=parse(weekStart);
+      const end=addDays(start,6);
+      const weekKm=sum(runs,"distansKm").toFixed(0);
+
+      // Estimate week height
+      let weekH=21;
+      runs.forEach(r=>{
+        weekH += r.anteckning ? 20 : 15;
+      });
+      ensure(Math.min(weekH, pageH-margin*2));
+
+      roundedBox(margin,y,contentW,12,"#FFFFFF","#E2E9E1",3);
+      line(`Vecka ${weekNo(start)}`,margin+4,y+7.5,12,"bold");
+      line(`${shortDate(weekStart)} - ${shortDate(iso(end))}`,margin+38,y+7.5,8,"normal","#6F7A72");
+      const kmText=`${weekKm} km`;
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(10);
+      doc.setTextColor("#2F6F4B");
+      doc.text(kmText,pageW-margin-4,y+7.5,{align:"right"});
+      y+=14;
+
+      runs.forEach(r=>{
+        const hasNote=!!r.anteckning;
+        const rowH=hasNote?18:13;
+        ensure(rowH+4);
+
+        // left date
+        line(weekday(parse(r.date)),margin+2,y+4.8,8,"bold","#3F8F5F");
+        line(shortDate(r.date),margin+2,y+10,8,"normal","#6F7A72");
+
+        // main run
+        line(`${r.type} · ${r.distansKm} km`,margin+30,y+5.2,10,"bold","#1D241F");
+        line(`${formatDuration(r.tidMinuter)} · ${r.tempoPerKm}/km`,margin+30,y+10.2,8,"normal","#6F7A72");
+
+        if(hasNote){
+          const wrapped=doc.splitTextToSize(String(r.anteckning),contentW-30);
+          doc.setFont("helvetica","italic");
+          doc.setFontSize(7.5);
+          doc.setTextColor("#6F7A72");
+          doc.text(wrapped.slice(0,2),margin+30,y+15);
+        }
+
+        doc.setDrawColor("#EEF3ED");
+        doc.line(margin+30,y+rowH, pageW-margin, y+rowH);
+        y+=rowH+2;
+      });
+
+      y+=5;
+    });
+
+    const filename=`lopschema-${iso(today)}.pdf`;
+    doc.save(filename);
+    toastMsg("PDF skapad");
+  }catch(e){
+    console.error(e);
+    toastMsg("Kunde inte skapa PDF");
+  }
+}
+
+
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lopschema-backup.json";a.click();URL.revokeObjectURL(a.href)
