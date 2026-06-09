@@ -3,13 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f7f2eb">
+<meta name="theme-color" content="#3F8F5F">
 <title>Löpschema</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Löpschema">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
-  --bg:#f8f3ed;--bg2:#fffaf5;--card:#ffffff;--ink:#211b17;--muted:#7d736b;--line:#eadfd5;
-  --accent:#c45f49;--accentDark:#9f4736;--accentSoft:#f0d4cb;--soft:#f3e8df;--ok:#3f8a5c;--danger:#b64040;
-  --shadow:0 8px 22px rgba(70,45,28,.07),0 1px 2px rgba(70,45,28,.06);
+  --bg:#F5F8F4;--bg2:#FBFDFB;--card:#ffffff;--ink:#1D241F;--muted:#6F7A72;--line:#E2E9E1;
+  --accent:#3F8F5F;--accentDark:#2F6F4B;--accentSoft:#DDEFE4;--soft:#EDF5EF;--ok:#2F7D5F;--danger:#B44A4A;
+  --shadow:0 8px 22px rgba(15,44,42,.07),0 1px 2px rgba(15,44,42,.06);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -37,7 +43,7 @@ h3{margin:0 0 10px;font-size:20px}
 .actionItem:active{background:var(--soft)}
 .stack{display:flex;flex-direction:column;gap:10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin:11px 0}
-.hero{background:linear-gradient(145deg,var(--accent),#d37a63);color:white;border:0;border-radius:18px;padding:18px}
+.hero{background:linear-gradient(145deg,var(--accent),#66B97C);color:white;border:0;border-radius:18px;padding:18px}
 .eyebrow{letter-spacing:2.8px;text-transform:uppercase;font-size:10px;font-weight:900;color:var(--muted)}
 .hero .eyebrow{color:rgba(255,255,255,.72)}
 .big{font-size:36px;font-weight:850;letter-spacing:-1.2px}
@@ -72,10 +78,10 @@ h3{margin:0 0 10px;font-size:20px}
 .deleteReveal{position:absolute;inset:0 0 0 auto;width:92px;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;opacity:0;transition:opacity .18s ease}.runSwipe.open .deleteReveal{opacity:1}
 .deleteReveal button{width:100%;height:100%;border:0;background:transparent;color:#fff;font:inherit}
 .run{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px;box-shadow:0 2px 10px rgba(70,45,28,.04);position:relative;overflow:hidden;transition:transform .2s ease;touch-action:pan-y}
-.run:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--type,#ddd)}
+.run:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--type,#ddd)}
 .runTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .runDist{font-size:21px;font-weight:850;letter-spacing:-.45px}
-.chip{display:inline-flex;align-items:center;border-radius:8px;background:#f6eee8;color:#755e55;padding:5px 8px;font-weight:750;margin-left:5px;font-size:11px}
+.chip{display:inline-flex;align-items:center;border-radius:8px;background:#EAF2F1;color:#556273;padding:5px 8px;font-weight:750;margin-left:5px;font-size:11px}
 .meta{color:#7c746c;font-size:13px;margin-top:2px;line-height:1.3}
 .check{width:30px;height:30px;border-radius:10px;border:2px solid #d0d0cc;background:transparent;color:white;font-weight:850;flex:0 0 auto}
 .done{opacity:.48}.done .runDist{text-decoration:line-through}.done .check{background:var(--ok);border-color:var(--ok)}
@@ -86,7 +92,7 @@ h3{margin:0 0 10px;font-size:20px}
 .bars{display:flex;gap:12px;align-items:end;overflow-x:auto;padding:16px 4px 7px;scroll-snap-type:x proximity}
 .barWrap{min-width:58px;text-align:center;color:#9b9188;font-weight:800;scroll-snap-align:start}
 .bar{height:128px;display:flex;align-items:end;justify-content:center}
-.barIn{width:44px;background:#ead0c7;border-radius:8px 8px 0 0;position:relative}.barIn.now{background:var(--accent)}
+.barIn{width:44px;background:#E4EAF3;border-radius:8px 8px 0 0;position:relative}.barIn.now{background:var(--accent)}
 .barVal{position:absolute;top:-24px;width:100%;font-size:13px;color:#958b82}
 .listLine{display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);font-size:16px}
 .modal{position:fixed;inset:0;z-index:50;background:rgba(25,20,16,.38);display:none;align-items:flex-end;touch-action:none;opacity:0;transition:opacity .24s ease}
@@ -210,7 +216,7 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 }
 .statBar{
   width:42px;
-  background:#ecd3ca;
+  background:#E4EAF3;
   border-radius:11px 11px 0 0;
   position:relative;
 }
@@ -259,7 +265,621 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
   font-weight:500;
 }
 
+
+/* --- Dark mode --- */
+body.dark{
+  --bg:#101610;
+  --bg2:#151D16;
+  --card:#1C251D;
+  --ink:#F0F6F1;
+  --muted:#A7B7AA;
+  --line:#2D3B2F;
+  --accent:#66B97C;
+  --accentDark:#3F8F5F;
+  --accentSoft:#213A28;
+  --soft:#243126;
+  --shadow:0 8px 22px rgba(0,0,0,.24),0 1px 2px rgba(0,0,0,.3);
+}
+body.dark .hero{background:linear-gradient(145deg,#66B97C,#3F8F5F)}
+body.dark .menuBtn,
+body.dark input,
+body.dark select,
+body.dark textarea,
+body.dark .actionMenu{background:#201d1b;color:var(--ink)}
+body.dark .backupActions .btn,
+body.dark .btn.secondary{background:#2b2522;color:var(--ink)}
+body.dark .chip{background:#2c2521;color:#d7c6ba}
+body.dark .barIn,
+body.dark .statBar{background:#24433F}
+body.dark .toast{background:#f4eee8;color:#171717}
+.themeItem{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch{width:40px;height:23px;border-radius:999px;background:#ded6ce;position:relative;flex:0 0 auto;transition:background .2s ease}
+.switch:after{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .2s ease}
+body.dark .switch{background:var(--accent)}
+body.dark .switch:after{transform:translateX(17px)}
+
+
+/* --- Dark mode readability refinements --- */
+body.dark .dayName{
+  color:#C8D0DA;
+}
+body.dark .dayNum{
+  color:#9EA8B5;
+}
+body.dark .meta{
+  color:#C3CBD6;
+}
+body.dark .smallText{
+  color:#AEB7C3;
+  opacity:.86;
+}
+body.dark .weekRange,
+body.dark .weekMeta,
+body.dark .statText,
+body.dark .statUnit,
+body.dark .sub{
+  color:#AAB3C0;
+}
+body.dark .run{
+  background:#20291F;
+}
+body.dark .run.done{
+  opacity:.55;
+}
+body.dark .run.done .meta,
+body.dark .run.done .smallText{
+  color:#8E99A8;
+}
+
+
+/* --- v57 polished green/dark design layer --- */
+body.dark{
+  --bg:#06110F;
+  --bg2:#0A1714;
+  --card:#12211C;
+  --ink:#F3FAF6;
+  --muted:#A6B6AE;
+  --line:#263A33;
+  --accent:#5DBB79;
+  --accentDark:#3F8F5F;
+  --accentSoft:#203D2C;
+  --soft:#1B2E27;
+  --shadow:0 14px 32px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.35);
+  background:
+    radial-gradient(circle at 30% 0%, rgba(93,187,121,.14), transparent 38%),
+    linear-gradient(180deg,#07120F,#0A1714 45%,#07120F);
+}
+body.dark .card,
+body.dark .statMini,
+body.dark .summaryTile{
+  background:linear-gradient(180deg,rgba(20,35,30,.96),rgba(16,29,24,.96));
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 12px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+}
+body.dark .hero{
+  background:linear-gradient(145deg,#66C784,#3F8F5F);
+  color:#F8FFF9;
+  box-shadow:0 16px 36px rgba(20,95,58,.32);
+}
+body.dark .hero .eyebrow{color:rgba(255,255,255,.74)}
+body.dark .hero .btn.secondary{
+  background:rgba(20,24,22,.82);
+  color:#fff;
+}
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark label,
+body.dark .weekTitle,
+body.dark .runDist,
+body.dark .statNumber,
+body.dark .summaryValue,
+body.dark .forwardNumber,
+body.dark .big{
+  color:#F5FAF6;
+}
+body.dark .sub,
+body.dark .weekRange,
+body.dark .weekMeta,
+body.dark .statText,
+body.dark .statLabel,
+body.dark .statUnit,
+body.dark .summaryUnit,
+body.dark .smallText,
+body.dark .nextMeta,
+body.dark .nextNote{
+  color:#AAB8B0;
+}
+body.dark .dayName{
+  color:#C7D2CC;
+}
+body.dark .dayName.today{
+  color:#75D892;
+}
+body.dark .dayNum{
+  color:#94A49B;
+}
+body.dark .dayLine{
+  border-top-color:rgba(255,255,255,.12);
+  opacity:1;
+}
+body.dark .plus{
+  color:#7E9188;
+}
+body.dark .run{
+  background:linear-gradient(180deg,#15231F,#111D19);
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 8px 20px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
+}
+body.dark .run.done{
+  opacity:.54;
+}
+body.dark .meta{
+  color:#CAD5CF;
+}
+body.dark .run.done .meta,
+body.dark .run.done .smallText{
+  color:#87968D;
+}
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#201D1A;
+  color:#F4F0EC;
+  border-color:#385047;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder{
+  color:#7E7770;
+}
+body.dark .sheet{
+  background:#FAFAF8;
+  color:#2C2925;
+  box-shadow:0 -20px 60px rgba(0,0,0,.34);
+}
+body.dark .sheet h2{
+  color:#2C2925;
+}
+body.dark .sheet label{
+  color:#504B45;
+}
+body.dark .sheet input,
+body.dark .sheet select,
+body.dark .sheet textarea{
+  background:#201D1A;
+  color:#F4F0EC;
+  border-color:#375043;
+}
+body.dark .sheet .smallText{
+  color:#7E8580;
+}
+body.dark .sheet hr{
+  border-top-color:#2C2B28;
+}
+body.dark .btn{
+  background:var(--accent);
+  color:#fff;
+}
+body.dark .btn.secondary{
+  background:#243126;
+  color:#EAF5EF;
+  border:1px solid rgba(93,187,121,.24);
+}
+body.dark .btn.danger,
+body.dark .textAction.danger{
+  color:#E06B6B;
+}
+body.dark .backupActions .btn{
+  background:#203028;
+  color:#EEF8F0;
+}
+body.dark .menuBtn,
+body.dark .actionMenu{
+  background:#14211D;
+  color:#F0F7F2;
+  border-color:rgba(255,255,255,.10);
+}
+body.dark .actionItem{
+  color:#F0F7F2;
+}
+body.dark .actionItem:active{
+  background:#1E3028;
+}
+body.dark .statBar,
+body.dark .barIn{
+  background:rgba(93,187,121,.26);
+}
+body.dark .statBar.current,
+body.dark .barIn.now{
+  background:linear-gradient(180deg,#69C988,#3F8F5F);
+}
+body.dark .statBarValue,
+body.dark .barVal,
+body.dark .statBarLabel,
+body.dark .barDate{
+  color:#ADB9B1;
+}
+body.dark .typeDot{
+  box-shadow:0 0 0 3px rgba(255,255,255,.035);
+}
+body.dark .listLine,
+body.dark .statTypeRow,
+body.dark .typeRow{
+  border-top-color:rgba(255,255,255,.10);
+}
+body.dark .toast{
+  background:#F4FAF6;
+  color:#101610;
+}
+
+/* Modal polish also affects light mode a bit */
+.sheet{
+  border-radius:26px 26px 0 0;
+}
+.dragHandle{
+  width:44px;
+  height:5px;
+  background:#D7D4CF;
+  margin-bottom:22px;
+}
+.sheet h2{
+  font-size:32px;
+  letter-spacing:-.9px;
+  margin-bottom:22px;
+}
+label{
+  font-size:14px;
+  font-weight:800;
+  margin:16px 0 7px;
+}
+input,select,textarea{
+  border-radius:13px;
+  min-height:46px;
+}
+.actions .btn{
+  min-height:52px;
+  border-radius:13px;
+}
+.moveRow .btn{
+  min-height:46px;
+}
+.hero{
+  padding:20px 18px 22px;
+}
+.hero .big{
+  line-height:1.02;
+}
+.card{
+  border-radius:18px;
+}
+.statMini,
+.statCard,
+.summaryTile{
+  border-radius:18px;
+}
+.statBars,
+.bars{
+  scrollbar-width:none;
+}
+.statBars::-webkit-scrollbar,
+.bars::-webkit-scrollbar{
+  display:none;
+}
+
+
+/* --- v58 mockup-inspired dark modal + type cards --- */
+.typeIcon{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  background:var(--type,#3F8F5F);
+  color:white;
+  box-shadow:0 7px 16px rgba(0,0,0,.12);
+}
+.typeIcon svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.typeIcon svg path,
+.typeIcon svg circle{
+  vector-effect:non-scaling-stroke;
+}
+.typeIcon svg path:not([fill="none"]){
+  fill:currentColor;
+  stroke:none;
+}
+.typeIcon svg circle{
+  fill:currentColor;
+  stroke:none;
+}
+.typeCards{
+  margin-top:10px;
+}
+.typeCard{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-top:1px solid var(--line);
+}
+.typeCard:first-child{
+  border-top:0;
+}
+.typeInfo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.typeTitle{
+  font-size:15px;
+  font-weight:750;
+  color:var(--ink);
+}
+.typeDesc{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+  margin-top:3px;
+  max-width:230px;
+}
+.typeCount{
+  color:var(--muted);
+  font-size:14px;
+  white-space:nowrap;
+  font-weight:600;
+}
+
+/* Better next-pass contrast */
+.hero .nextMeta{
+  color:rgba(255,255,255,.86);
+  opacity:1;
+}
+.hero .nextNote{
+  color:rgba(255,255,255,.74);
+  opacity:1;
+}
+
+/* Existing modal becomes app-like in dark mode */
+body.dark .modal{
+  background:rgba(0,0,0,.35);
+}
+body.dark .sheet{
+  background:
+    radial-gradient(circle at 30% 0%, rgba(93,187,121,.10), transparent 34%),
+    linear-gradient(180deg,#0D1815,#0A1411);
+  color:#F3FAF6;
+  border:1px solid rgba(255,255,255,.08);
+  border-bottom:0;
+}
+body.dark .dragHandle{
+  background:rgba(255,255,255,.24);
+}
+body.dark .sheet h2{
+  color:#F3FAF6;
+}
+body.dark .sheet label{
+  color:#DDE7E1;
+  font-weight:700;
+}
+body.dark .sheet input,
+body.dark .sheet select,
+body.dark .sheet textarea{
+  background:rgba(255,255,255,.035);
+  color:#F3FAF6;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.dark .sheet input::placeholder,
+body.dark .sheet textarea::placeholder{
+  color:rgba(243,250,246,.36);
+}
+body.dark .sheet .smallText{
+  color:#AAB8B0;
+}
+body.dark .sheet hr{
+  border-top-color:rgba(255,255,255,.12);
+}
+body.dark .sheet .btn{
+  background:linear-gradient(135deg,#66C784,#4FAF6F);
+}
+body.dark .sheet .btn.secondary{
+  background:transparent;
+  border:1px solid rgba(93,187,121,.55);
+  color:#DDFBE7;
+}
+body.dark .sheet .btn.danger{
+  background:transparent;
+  color:#FF7777;
+}
+
+/* Light modal remains clean but less stark */
+.sheet{
+  background:
+    radial-gradient(circle at 30% 0%, rgba(63,143,95,.06), transparent 34%),
+    #FAFAF8;
+}
+.sheet input,
+.sheet select,
+.sheet textarea{
+  background:#fff;
+}
+body.dark .check{
+  border-color:#66736B;
+}
+body.dark .done .check{
+  background:var(--ok);
+  border-color:var(--ok);
+}
+
+/* Icon-enhanced type card dark refinements */
+body.dark .typeCard{
+  border-top-color:rgba(255,255,255,.10);
+}
+body.dark .typeTitle{
+  color:#F3FAF6;
+}
+body.dark .typeDesc,
+body.dark .typeCount{
+  color:#AAB8B0;
+}
+body.dark .typeIcon{
+  box-shadow:0 9px 18px rgba(0,0,0,.22);
+}
+
+
+/* --- v59 pass-card contrast refinements --- */
+body.dark .run{
+  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98));
+  border-color:rgba(255,255,255,.10);
+}
+body.dark .runDist{
+  color:#F7FCF8;
+}
+body.dark .meta{
+  color:#D2DED7;
+  opacity:.92;
+  font-weight:500;
+}
+body.dark .smallText{
+  color:#B1BDB6;
+  opacity:.78;
+}
+body.dark .run.done{
+  opacity:.48;
+}
+body.dark .run.done .runDist,
+body.dark .run.done .meta,
+body.dark .run.done .smallText{
+  color:#89978F;
+}
+body.dark .run.done .runDist{
+  text-decoration-color:#89978F;
+}
+body.dark .check{
+  border-color:#607068;
+  color:transparent;
+}
+body.dark .done .check{
+  color:white;
+}
+
+/* keep pass metadata calm in light mode too */
+.meta{
+  font-weight:500;
+}
+
+
+/* --- v60 premium dark pass cards --- */
+body.dark .runDist{
+  color:#FFFFFF !important;
+}
+
+body.dark .meta,
+body.dark .runMeta,
+body.dark .runDetails{
+  color:rgba(255,255,255,.92) !important;
+  font-weight:500;
+}
+
+body.dark .meta b,
+body.dark .meta strong{
+  color:#FFFFFF !important;
+}
+
+body.dark .dayName{
+  color:#FFFFFF !important;
+  font-weight:700;
+}
+
+body.dark .dayNum{
+  color:#D6DEE2 !important;
+}
+
+body.dark .weekTitle{
+  color:#FFFFFF !important;
+}
+
+body.dark .weekRange,
+body.dark .weekMeta{
+  color:#C4CDD1 !important;
+}
+
+body.dark .smallText{
+  color:rgba(255,255,255,.72) !important;
+}
+
+body.dark .run{
+  background:linear-gradient(
+    180deg,
+    rgba(22,34,29,.98),
+    rgba(15,25,21,.98)
+  ) !important;
+}
+
+body.dark .run.done{
+  opacity:.5;
+}
+
+
+/* --- v61 hero-only contrast fix --- */
+
+/* Restore regular pass cards */
+body.dark .runDist{color:inherit !important;}
+body.dark .meta,
+body.dark .runMeta,
+body.dark .runDetails{
+  color:#CAD5CF !important;
+}
+body.dark .dayName{
+  color:#C7D2CC !important;
+}
+body.dark .dayNum{
+  color:#94A49B !important;
+}
+body.dark .weekRange,
+body.dark .weekMeta{
+  color:#AAB8B0 !important;
+}
+body.dark .smallText{
+  color:#AAB8B0 !important;
+}
+
+/* Only the top "next pass" widget */
+body.dark .hero .nextMeta{
+  color:#FFFFFF !important;
+  opacity:1 !important;
+  font-weight:500;
+}
+body.dark .hero .nextNote{
+  color:rgba(255,255,255,.82) !important;
+  opacity:1 !important;
+}
+body.dark .hero .smallText{
+  color:rgba(255,255,255,.86) !important;
+}
+
 </style>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem("runplanner.theme")==="dark"){
+      document.documentElement.classList.add("dark-preload");
+      document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("dark")});
+    }
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="app">
@@ -279,6 +899,10 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
             </button>
             <div class="actionMenu" id="actionMenu">
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
+              <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
+                <span>Dark mode</span>
+                <span class="switch" aria-hidden="true"></span>
+              </button>
             </div>
           </div>
         </div>
@@ -346,7 +970,39 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
 
 <script>
 const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
-const TYPE_COLORS={"Distanspass":"#c45f49","Intervaller":"#7b6fd0","Tröskelpass":"#d28a3d","Långpass":"#2f7b68","Återhämtning":"#7aa0a8","Tävling":"#b64040","Backpass":"#8a6847"};
+const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848"};
+
+const TYPE_ICONS={
+  "Distanspass":"shoe",
+  "Långpass":"mountain",
+  "Intervaller":"bolt",
+  "Tröskelpass":"pulse",
+  "Återhämtning":"heart",
+  "Tävling":"flag",
+  "Backpass":"mountain"
+};
+const TYPE_DESCRIPTIONS={
+  "Distanspass":"Lugn till måttlig fart. Bygger aerob bas.",
+  "Långpass":"Längre pass i lugn fart. Viktigt för uthållighet.",
+  "Intervaller":"Korta, snabba repetitioner. Förbättrar fart.",
+  "Tröskelpass":"Pass runt tröskelfart. Kontrollerat hårt.",
+  "Återhämtning":"Mycket lugn löpning. Fokus på återhämtning.",
+  "Tävling":"Tävlingsdag. Dags att visa vad träningen gett.",
+  "Backpass":"Styrka och löpteknik i backe."
+};
+function typeIconSvg(type){
+  const icon=TYPE_ICONS[type]||"shoe";
+  const paths={
+    shoe:`<path d="M6 15.5c2.2.1 4.2-.4 5.7-1.7l2.5-2 2.6.9c1.6.5 3 1.5 4.2 2.8l.6.7-1.8 1.8-1.4-1.3c-1-.9-2-1.5-3.2-1.9l-2.6-.8-1.7 1.4c-1.4 1.2-3.2 1.8-5 1.8H3.8v-1.8H6Z"/><circle cx="12" cy="8" r="1.6"/>`,
+    mountain:`<path d="M3.5 18.5 9.2 7.8l4.1 6.2 2.3-3.5 4.9 8H3.5Z"/><path d="m8.9 12.8 1.1 1.1 1.3-1.5"/>`,
+    bolt:`<path d="M13 2.8 5.8 13h5l-1 8.2L18.5 9.8h-5.1L13 2.8Z"/>`,
+    pulse:`<path d="M3 13h3.4l1.8-4.8 3.1 9.4 2.2-7.1 1.5 2.5H21"/>`,
+    heart:`<path d="M12 20s-7.5-4.4-7.5-10a4.1 4.1 0 0 1 7.5-2.3A4.1 4.1 0 0 1 19.5 10C19.5 15.6 12 20 12 20Z"/>`,
+    flag:`<path d="M6 21V4.5"/><path d="M7 5h10l-1.2 4L17 13H7V5Z"/>`
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[icon]}</svg>`;
+}
+
 const KEY="runplanner.v4";
 let state=load(); let showPastWeeks=false;
 let view=0,startX=0,lastEdited=null;
@@ -546,8 +1202,8 @@ function renderStats(){
 
     <div class="card">
       <div class="eyebrow">Kommande passtyper</div>
-      <div class="statTypeList">
-        ${Object.entries(types).map(([k,v])=>`<div class="statTypeRow"><span class="statTypeName"><span class="typeDot" style="--dot:${TYPE_COLORS[k]||'#bbb'}"></span>${k}</span><span class="statTypeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
+      <div class="typeCards">
+        ${Object.entries(types).map(([k,v])=>`<div class="typeCard"><div class="typeInfo"><span class="typeIcon" style="--type:${TYPE_COLORS[k]||'#bbb'}">${typeIconSvg(k)}</span><div><div class="typeTitle">${k}</div><div class="typeDesc">${TYPE_DESCRIPTIONS[k]||""}</div></div></div><span class="typeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
       </div>
     </div>`;
 }
@@ -728,6 +1384,21 @@ sheet.addEventListener("touchend",()=>{
   modalDragging=false;
   modalCurrentY=0;
 },{passive:true});
+
+
+function applyTheme(){
+  const dark=localStorage.getItem("runplanner.theme")==="dark";
+  document.body.classList.toggle("dark",dark);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content",dark?"#121110":"#0F766E");
+}
+function toggleDarkMode(event){
+  event.stopPropagation();
+  const isDark=document.body.classList.contains("dark");
+  localStorage.setItem("runplanner.theme",isDark?"light":"dark");
+  applyTheme();
+}
+applyTheme();
 
 render();
 </script>
