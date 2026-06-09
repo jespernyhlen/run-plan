@@ -50,7 +50,7 @@ h3{margin:0 0 10px;font-size:20px}
 .btn:active{transform:scale(.98)}
 .btn.secondary{background:var(--soft);color:var(--ink);box-shadow:none}
 .btn.ghost{background:transparent;color:var(--muted);box-shadow:none}
-.btn.danger{background:transparent;color:var(--danger);box-shadow:none}
+.btn.danger{background:transparent !important;color:var(--danger);box-shadow:none;border:0}
 .backupBox{padding-top:2px}
 .backupHint{font-size:13px;color:var(--muted);line-height:1.4;font-style:italic;opacity:.85;margin:10px 0 16px}
 .backupActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
@@ -710,6 +710,419 @@ body.dark .runSwipe{background:#B44A4A}
 .switch:after{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .2s ease}
 body.dark .switch{background:var(--accent)}
 body.dark .switch:after{transform:translateX(17px)}
+
+/* Garmin sync confirmation modal */
+.garminModal{
+  position:fixed;
+  inset:0;
+  z-index:90;
+  display:none;
+  align-items:flex-end;
+  background:rgba(8,12,10,.48);
+  opacity:0;
+  transition:opacity .22s ease;
+}
+.garminModal.show{
+  display:flex;
+  opacity:1;
+}
+.garminSheet{
+  width:100%;
+  max-width:600px;
+  margin:0 auto;
+  max-height:92dvh;
+  overflow:auto;
+  background:var(--card);
+  color:var(--ink);
+  border-radius:26px 26px 0 0;
+  padding:18px 18px calc(22px + env(safe-area-inset-bottom));
+  box-shadow:0 -18px 48px rgba(0,0,0,.25);
+}
+.garminTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+.garminTop h2{
+  font-size:24px;
+  margin:0 0 3px;
+}
+.garminClose{
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:0;
+  background:var(--soft);
+  color:var(--ink);
+  font-size:24px;
+  line-height:1;
+}
+.garminIntro{
+  color:var(--muted);
+  font-size:14px;
+  margin:0;
+}
+.garminMatch{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin:12px 0;
+  background:var(--card);
+  box-shadow:0 4px 14px rgba(15,44,42,.04);
+}
+.garminMatchHeader{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.garminDate{
+  font-size:16px;
+  font-weight:850;
+}
+.garminBadge{
+  display:inline-flex;
+  align-items:center;
+  padding:5px 8px;
+  border-radius:999px;
+  background:var(--accentSoft);
+  color:var(--accentDark);
+  font-size:12px;
+  font-weight:750;
+}
+.garminLabel{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.garminPlanned{
+  font-size:15px;
+  line-height:1.35;
+}
+.garminDivider{
+  border:0;
+  border-top:1px solid var(--line);
+  margin:12px 0;
+}
+.garminActualMain{
+  font-size:28px;
+  font-weight:850;
+  letter-spacing:-.7px;
+  margin:2px 0 8px;
+}
+.garminMetrics{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:650;
+}
+.garminMetric strong{
+  color:var(--ink);
+}
+.garminActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.garminActions .btn{
+  width:100%;
+}
+.garminFooter{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  margin-top:14px;
+}
+.garminEmpty{
+  padding:22px 8px;
+  text-align:center;
+  color:var(--muted);
+}
+.garminMatch.rejected{
+  opacity:.48;
+}
+.garminMatch.confirmed{
+  border-color:rgba(63,143,95,.45);
+}
+body.dark .garminModal{
+  background:rgba(0,0,0,.56);
+}
+body.dark .garminSheet{
+  background:#0D1815;
+  border:1px solid rgba(255,255,255,.08);
+  border-bottom:0;
+}
+body.dark .garminMatch{
+  background:linear-gradient(180deg,rgba(20,35,30,.96),rgba(16,29,24,.96));
+  border-color:rgba(255,255,255,.09);
+}
+body.dark .garminClose{
+  background:#1B2E27;
+  color:#F3FAF6;
+}
+body.dark .garminBadge{
+  background:rgba(93,187,121,.16);
+  color:#7EE29B;
+}
+body.dark .garminMetric strong{
+  color:#F3FAF6;
+}
+
+
+/* Garmin checkbox review */
+.garminTick{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  border:2px solid var(--accent);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  font-weight:850;
+  color:transparent;
+  background:transparent;
+  flex:0 0 auto;
+}
+.garminTick.active{
+  background:var(--accent);
+  color:#fff;
+}
+body.dark .garminTick{
+  border-color:#5DBB79;
+}
+body.dark .garminTick.active{
+  background:#5DBB79;
+  color:#0A1714;
+}
+
+
+/* Garmin comparison layout */
+.garminCompare{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.garminPlanBox,
+.garminActualBox{
+  border-radius:15px;
+  padding:12px;
+}
+.garminPlanBox{
+  background:var(--soft);
+  border:1px solid var(--line);
+}
+.garminActualBox{
+  background:linear-gradient(145deg,rgba(63,143,95,.12),rgba(63,143,95,.04));
+  border:1px solid rgba(63,143,95,.22);
+}
+.garminPlanTitle,
+.garminActualTitle{
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.garminPlanMain{
+  font-size:16px;
+  font-weight:800;
+  color:var(--ink);
+  margin-bottom:4px;
+}
+.garminPlanMeta{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.35;
+}
+.garminActualBox .garminActualMain{
+  margin:0 0 8px;
+}
+body.dark .garminPlanBox{
+  background:#17241F;
+  border-color:rgba(255,255,255,.08);
+}
+body.dark .garminActualBox{
+  background:linear-gradient(145deg,rgba(93,187,121,.16),rgba(93,187,121,.05));
+  border-color:rgba(93,187,121,.28);
+}
+body.dark .garminPlanMain{
+  color:#F3FAF6;
+}
+body.dark .garminPlanMeta,
+body.dark .garminPlanTitle,
+body.dark .garminActualTitle{
+  color:#AAB8B0;
+}
+
+
+/* Garmin result on completed cards */
+.planText{
+  font-style:normal;
+  opacity:.72;
+}
+body.dark .planText{
+  opacity:.74;
+}
+
+
+/* Garmin status icon on pass cards */
+.runRight{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.garminIcon{
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  background:rgba(63,143,95,.08);
+  font-size:14px;
+  line-height:1;
+}
+body.dark .garminIcon{
+  background:rgba(93,187,121,.10);
+  color:#8FA99A;
+}
+.garminInfoBox{
+  display:none;
+  margin:16px 0 4px;
+  padding:12px;
+  border-radius:14px;
+  background:var(--soft);
+  border:1px solid var(--line);
+}
+.garminInfoBox.show{
+  display:block;
+}
+.garminInfoTitle{
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.garminInfoMain{
+  font-size:15px;
+  font-weight:750;
+  color:var(--ink);
+}
+.garminInfoMeta{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:3px;
+}
+body.dark .garminInfoBox{
+  background:#17241F;
+  border-color:rgba(255,255,255,.08);
+}
+body.dark .garminInfoMain{
+  color:#F3FAF6;
+}
+.unlinkGarminBtn{
+  display:none;
+  margin:8px auto 0;
+}
+.unlinkGarminBtn.show{
+  display:block;
+  margin:8px auto 0;
+  text-align:center;
+}
+
+
+.menuSectionLabel{
+  padding:10px 14px 6px;
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+
+.menuSyncItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.menuSyncIcon{
+  color:var(--muted);
+  font-size:16px;
+  line-height:1;
+}
+body.dark .menuSyncIcon{
+  color:#AAB8B0;
+}
+
+
+.menuSectionLabel{
+  padding:12px 12px 5px;
+  margin-top:4px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  opacity:.82;
+}
+.menuSyncIcon{
+  color:var(--muted);
+  font-size:18px;
+  line-height:1;
+  font-weight:900;
+  transform:scale(1.18);
+}
+body.dark .menuSyncIcon{
+  color:#AAB8B0;
+}
+
+
+.syncStatus{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:150;
+  display:none;
+}
+.syncStatus.show{display:block}
+.syncStatusCard{
+  min-width:220px;
+  padding:18px 22px;
+  border-radius:18px;
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.syncStatusSpinner{
+  width:32px;height:32px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  border:3px solid rgba(120,120,120,.2);
+  border-top-color:var(--accent);
+  animation:syncSpin .8s linear infinite;
+}
+.syncStatusTitle{font-weight:800}
+.syncStatusText{font-size:13px;color:var(--muted);margin-top:4px}
+@keyframes syncSpin{to{transform:rotate(360deg)}}
+
 </style>
 <script>
 (function(){
@@ -718,7 +1131,8 @@ body.dark .switch:after{transform:translateX(17px)}
       document.documentElement.classList.add("dark-preload");
       document.addEventListener("DOMContentLoaded",function(){document.body.classList.add("dark")});
     }
-  }catch(e){}
+  }catch(e){
+    setSyncStatus(false);}
 })();
 </script>
 </head>
@@ -740,12 +1154,13 @@ body.dark .switch:after{transform:translateX(17px)}
             </button>
             <div class="actionMenu" id="actionMenu">
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
-              <button class="actionItem" onclick="syncGarmin();closeActionMenu()">Synka Garmin</button>
-<button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Byt Garmin API-nyckel</button>
-<button class="actionItem themeItem" onclick="toggleDarkMode(event)">
+              <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
               </button>
+              <div class="menuSectionLabel">Garmin</div>
+              <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
+              <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
             </div>
           </div>
         </div>
@@ -787,6 +1202,8 @@ body.dark .switch:after{transform:translateX(17px)}
   <div class="sheet" id="sheet">
     <div class="dragHandle"></div>
     <div class="row"><h2 id="sheetTitle">Nytt pass</h2></div>
+    <div id="garminInfoBox" class="garminInfoBox"></div>
+    <button id="unlinkGarminBtn" class="textAction danger unlinkGarminBtn" onclick="unlinkGarminFromRun()">Ta bort Garmin-koppling</button>
     <input type="hidden" id="runId">
     <label>Datum</label><input id="date" type="date">
     <label>Typ av pass</label><select id="type"></select>
@@ -810,6 +1227,28 @@ body.dark .switch:after{transform:translateX(17px)}
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="syncStatus" class="syncStatus">
+  <div class="syncStatusCard">
+    <div class="syncStatusSpinner"></div>
+    <div class="syncStatusTitle">Synkar Garmin-pass</div>
+    <div class="syncStatusText">Hämtar aktiviteter...</div>
+  </div>
+</div>
+
+<div id="garminModal" class="garminModal" onclick="if(event.target===garminModal)closeGarminModal()">
+  <div class="garminSheet">
+    <div class="garminTop">
+      <div>
+        <h2 id="garminModalTitle">Garmin-matchning</h2>
+        <p class="garminIntro" id="garminModalIntro">Bekräfta att rätt pass har matchats.</p>
+      </div>
+      <button class="garminClose" onclick="closeGarminModal()" aria-label="Stäng">×</button>
+    </div>
+    <div id="garminMatches"></div>
+    <div class="garminFooter" id="garminFooter"></div>
+  </div>
+</div>
+
 
 <script>
 const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
@@ -980,11 +1419,19 @@ function renderSchema(){
 }
 function runCard(r){
   const color=TYPE_COLORS[r.type]||"#bbb";
+  const hasGarmin=r.garmin&&r.garmin.distanceKm;
+  const displayKm=hasGarmin?Number(r.garmin.distanceKm).toFixed(2).replace(".",","):r.distansKm;
+  const displayTime=hasGarmin?formatDuration(r.garmin.timeMin):formatDuration(r.tidMinuter);
+  const displayPace=hasGarmin?r.garmin.pace:r.tempoPerKm;
+  const garminIcon=hasGarmin?`<span class="garminIcon" title="Synkat från Garmin">⌚</span>`:"";
   return `<div class="runSwipe" data-id="${r.id}">
     <div class="deleteReveal"><button onclick="event.stopPropagation();quickDeleteRun(${r.id})">Ta bort</button></div>
     <div class="run ${r.genomfort?'done':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
-      <div class="runTop"><div><span class="runDist">${r.distansKm} km</span></div><button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
-      <div class="meta">${r.type} · ${formatDuration(r.tidMinuter)} · ${r.tempoPerKm}/km</div>
+      <div class="runTop">
+        <div><span class="runDist">${displayKm} km</span></div>
+        <div class="runRight">${garminIcon}<button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
+      </div>
+      <div class="meta">${r.type} · ${displayTime} · ${displayPace}/km</div>
       ${r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:""}
     </div>
   </div>`;
@@ -1062,8 +1509,39 @@ function showModal(){
     sheet.style.transform="translateY(0)";
   });
 }
-function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());type.value=TYPES[0];km.value="";mins.value="";pace.value="";note.value="";moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
-function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Ändra pass";runId.value=r.id;date.value=r.date;type.value=r.type;km.value=r.distansKm;mins.value=r.tidMinuter;pace.value=r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
+function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());type.value=TYPES[0];km.value="";mins.value="";pace.value="";note.value="";hideGarminEditInfo();moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
+function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Redigera pass";runId.value=r.id;date.value=r.date;type.value=r.type;km.value=r.distansKm;mins.value=r.tidMinuter;pace.value=r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;showGarminEditInfo(r);moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
+
+function hideGarminEditInfo(){
+  if(typeof garminInfoBox!=="undefined"){
+    garminInfoBox.classList.remove("show");
+    garminInfoBox.innerHTML="";
+  }
+  if(typeof unlinkGarminBtn!=="undefined"){
+    unlinkGarminBtn.classList.remove("show");
+  }
+}
+function showGarminEditInfo(r){
+  hideGarminEditInfo();
+  if(!r||!r.garmin||!r.garmin.distanceKm)return;
+  const distance=Number(r.garmin.distanceKm||0).toFixed(2).replace(".",",");
+  garminInfoBox.innerHTML=`<div class="garminInfoTitle">Synkat från Garmin</div>
+    <div class="garminInfoMain">${distance} km · ${formatDuration(r.garmin.timeMin||0)} · ${r.garmin.pace||"–"}/km</div>
+    ${r.garmin.name?`<div class="garminInfoMeta">${esc(r.garmin.name)}</div>`:""}`;
+  garminInfoBox.classList.add("show");
+  unlinkGarminBtn.classList.add("show");
+}
+function unlinkGarminFromRun(){
+  if(!runId.value)return;
+  const r=state.runs.find(x=>x.id==runId.value);
+  if(!r||!r.garmin)return;
+  if(!confirm("Ta bort kopplingen till Garmin-aktiviteten?"))return;
+  delete r.garmin;
+  hideGarminEditInfo();
+  persist();
+  toastMsg("Garmin-koppling borttagen");
+}
+
 function closeRun(){
   sheet.style.transform="translateY(100%)";
   modal.style.opacity="0";
@@ -1230,13 +1708,60 @@ sheet.addEventListener("touchend",()=>{
 
 
 
+
 const GARMIN_SYNC_URL="https://garmin-sync-rcr9.onrender.com/garmin/runs";
+let garminPendingMatches=[];
+
+function formatGarminDate(dateString){
+  return parse(dateString).toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
+}
+
+function matchGarminRuns(garminRuns){
+  const usedRunIds=new Set();
+  const matches=[];
+
+  garminRuns.forEach(gr=>{
+    const sameDay=state.runs.filter(r=>!r.genomfort && r.date===gr.date && !usedRunIds.has(String(r.id)));
+
+    let planned=null;
+
+    if(sameDay.length===1){
+      planned=sameDay[0];
+    }else if(sameDay.length>1){
+      planned=sameDay
+        .slice()
+        .sort((a,b)=>
+          Math.abs((Number(a.distansKm)||0)-Number(gr.distanceKm||0)) -
+          Math.abs((Number(b.distansKm)||0)-Number(gr.distanceKm||0))
+        )[0];
+    }
+
+    if(planned){
+      usedRunIds.add(String(planned.id));
+      matches.push({
+        id:`${planned.id}-${gr.garminId||Math.random()}`,
+        status:"pending",
+        plannedId:planned.id,
+        planned,
+        garmin:gr
+      });
+    }
+  });
+
+  return matches;
+}
+
+function setSyncStatus(show){
+  const el=document.getElementById('syncStatus');
+  if(el) el.classList.toggle('show', !!show);
+}
 
 async function syncGarmin(){
   let apiKey=localStorage.getItem("garmin.apiKey")||prompt("Ange din Garmin Sync API-nyckel");
   if(!apiKey) return;
 
   localStorage.setItem("garmin.apiKey",apiKey);
+  setSyncStatus(true);
   toastMsg("Synkar Garmin...");
 
   try{
@@ -1256,33 +1781,18 @@ async function syncGarmin(){
     }
 
     const garminRuns=await res.json();
-    let matched=0;
+    garminPendingMatches=matchGarminRuns(garminRuns);
 
-    garminRuns.forEach(gr=>{
-      const sameDay=state.runs.filter(r=>!r.genomfort && r.date===gr.date);
+    if(!garminPendingMatches.length){
+      setSyncStatus(false);
+      toastMsg("Inga pass att bekräfta");
+      return;
+    }
 
-      let match=null;
-
-      if(sameDay.length===1){
-        match=sameDay[0];
-      }else if(sameDay.length>1){
-        match=sameDay
-          .slice()
-          .sort((a,b)=>
-            Math.abs((a.distansKm||0)-(gr.distanceKm||0)) -
-            Math.abs((b.distansKm||0)-(gr.distanceKm||0))
-          )[0];
-      }
-
-      if(match){
-        match.genomfort=true;
-        matched++;
-      }
-    });
-
-    persist();
-    toastMsg(`Synk klart • ${matched} pass matchade`);
+    setSyncStatus(false);
+    openGarminModal();
   }catch(e){
+    setSyncStatus(false);
     console.error(e);
     const msg=String(e.message||e);
     if(msg.includes("Failed to fetch") || msg.includes("NetworkError")){
@@ -1293,7 +1803,105 @@ async function syncGarmin(){
   }
 }
 
+function renderGarminModal(){
+  const active=garminPendingMatches.filter(m=>m.status!=="rejected");
+  const pending=garminPendingMatches.filter(m=>m.status==="pending");
+
+  garminModalTitle.textContent=`${active.length} pass matchades`;
+  garminModalIntro.textContent=active.length
+    ?"Bekräfta att rätt pass har matchats."
+    :"Inga matchningar kvar att bekräfta.";
+
+  garminMatches.innerHTML=garminPendingMatches.length ? garminPendingMatches.map((m,i)=>{
+    const p=m.planned;
+    const g=m.garmin;
+    const statusClass=m.status==="rejected"?"rejected":m.status==="confirmed"?"confirmed":"";
+    const distance=Number(g.distanceKm||0).toFixed(2).replace(".",",");
+    const time=formatDuration(g.timeMin||0);
+    return `<div class="garminMatch ${statusClass}">
+      <div class="garminMatchHeader">
+        <div class="garminDate">${formatGarminDate(g.date)}</div>
+        <button class="garminTick ${m.status!=='rejected'?'active':''}" onclick="toggleGarminMatch(${i})" aria-label="Välj matchning">✓</button>
+      </div>
+
+      <div class="garminCompare">
+        <div class="garminPlanBox">
+          <div class="garminPlanTitle">Planerat pass</div>
+          <div class="garminPlanMain">${p.type} · ${p.distansKm} km</div>
+          <div class="garminPlanMeta">${formatDuration(p.tidMinuter)} · ${p.tempoPerKm}/km</div>
+        </div>
+
+        <div class="garminActualBox">
+          <div class="garminActualTitle">Garmin-aktivitet</div>
+          <div class="garminActualMain">${distance} km</div>
+          <div class="garminMetrics">
+            <span class="garminMetric"><strong>${time}</strong> tid</span>
+            <span class="garminMetric"><strong>${g.pace||"–"}</strong> min/km</span>
+            ${g.name?`<span class="garminMetric">${esc(g.name)}</span>`:""}
+          </div>
+        </div>
+      </div>
+
+
+    </div>`;
+  }).join("") : `<div class="garminEmpty">Inga matchningar hittades.</div>`;
+
+  garminFooter.innerHTML=
+    `<button class="btn ${active.length===0?'secondary':''}"
+       style="width:100%;${active.length===0?'opacity:.45;pointer-events:none;':''}"
+       onclick="confirmAllGarminMatches()">
+       Bekräfta valda (${active.length})
+     </button>
+     <button class="textAction" style="text-align:center;width:auto;padding:8px 24px" onclick="closeGarminModal()">Avbryt</button>`;
+}
+
+function openGarminModal(){
+  renderGarminModal();
+  garminModal.classList.add("show");
+}
+
+function closeGarminModal(){
+  garminModal.classList.remove("show");
+}
+
+function applyGarminMatch(match){
+  const run=state.runs.find(r=>String(r.id)===String(match.plannedId));
+  if(!run) return false;
+
+  run.genomfort=true;
+  run.garmin={
+    id:match.garmin.garminId||"",
+    name:match.garmin.name||"",
+    distanceKm:match.garmin.distanceKm||0,
+    timeMin:match.garmin.timeMin||0,
+    pace:match.garmin.pace||"",
+    syncedAt:new Date().toISOString()
+  };
+  return true;
+}
+
+function toggleGarminMatch(index){
+  const match=garminPendingMatches[index];
+  if(!match) return;
+  match.status = match.status==="rejected" ? "pending" : "rejected";
+  renderGarminModal();
+}
+
+function confirmAllGarminMatches(){
+  let count=0;
+  garminPendingMatches.forEach(match=>{
+    if(match.status==="pending" && applyGarminMatch(match)){
+      match.status="confirmed";
+      count++;
+    }
+  });
+  persist();
+  closeGarminModal();
+  toastMsg(`Bekräftade ${count} pass`);
+}
+
 function resetGarminKey(){
+  if(!confirm("Rensa sparad Garmin API-nyckel? Du behöver ange den igen vid nästa synk.")) return;
   localStorage.removeItem("garmin.apiKey");
   toastMsg("Garmin API-nyckel rensad");
 }
