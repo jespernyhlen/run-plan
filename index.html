@@ -34,7 +34,6 @@ h2{margin:0;font-size:27px;letter-spacing:-.7px}
 h3{margin:0 0 10px;font-size:20px}
 .sub{color:var(--muted);font-size:14px;margin:0 0 14px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}.headerActions{display:flex;align-items:flex-start;gap:8px;padding-top:4px}
-.headerActions{display:flex;align-items:flex-start;gap:8px;padding-top:4px}
 .menuWrap{position:relative}
 .menuBtn{width:38px;height:38px;border:1px solid var(--line);background:#fff;color:#6f665f;border-radius:10px;font-size:18px;line-height:1;display:grid;place-items:center;padding:0;box-shadow:0 1px 6px rgba(0,0,0,.04);font-weight:400} .menuBtn svg{display:block}
 .actionMenu{position:absolute;right:0;top:46px;min-width:210px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgba(70,45,28,.14);padding:6px;display:none;z-index:40}
@@ -66,7 +65,6 @@ h3{margin:0 0 10px;font-size:20px}
 .week{margin-top:22px;scroll-margin-top:88px}
 .weekHead{display:flex;align-items:flex-start;justify-content:space-between;margin:0 2px 10px}
 .weekTitle{font-size:18px;font-weight:800;letter-spacing:-.25px}.weekTitleRow{display:flex;align-items:baseline;gap:10px}.weekRange{color:var(--muted);font-size:12px;opacity:.75;font-weight:500}
-.weekRange{color:var(--muted);font-size:12px}
 .weekMeta{font-size:12px;color:var(--muted);font-weight:800}
 .day{display:grid;grid-template-columns:78px 1fr 28px;gap:8px;align-items:start;margin:10px 0}
 .dayName{font-weight:800;letter-spacing:1px;color:#7f746b;text-transform:uppercase;font-size:11px;padding-top:3px;display:flex;align-items:center;gap:4px;white-space:nowrap}
@@ -265,310 +263,110 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
   font-weight:500;
 }
 
-
-/* --- Dark mode --- */
-body.dark{
-  --bg:#101610;
-  --bg2:#151D16;
-  --card:#1C251D;
-  --ink:#F0F6F1;
-  --muted:#A7B7AA;
-  --line:#2D3B2F;
-  --accent:#66B97C;
-  --accentDark:#3F8F5F;
-  --accentSoft:#213A28;
-  --soft:#243126;
-  --shadow:0 8px 22px rgba(0,0,0,.24),0 1px 2px rgba(0,0,0,.3);
-}
-body.dark .hero{background:linear-gradient(145deg,#66B97C,#3F8F5F)}
-body.dark .menuBtn,
-body.dark input,
-body.dark select,
-body.dark textarea,
-body.dark .actionMenu{background:#201d1b;color:var(--ink)}
-body.dark .backupActions .btn,
-body.dark .btn.secondary{background:#2b2522;color:var(--ink)}
-body.dark .chip{background:#2c2521;color:#d7c6ba}
-body.dark .barIn,
-body.dark .statBar{background:#24433F}
-body.dark .toast{background:#f4eee8;color:#171717}
-.themeItem{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.switch{width:40px;height:23px;border-radius:999px;background:#ded6ce;position:relative;flex:0 0 auto;transition:background .2s ease}
-.switch:after{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .2s ease}
-body.dark .switch{background:var(--accent)}
-body.dark .switch:after{transform:translateX(17px)}
-
-
-/* --- Dark mode readability refinements --- */
-body.dark .dayName{
-  color:#C8D0DA;
-}
-body.dark .dayNum{
-  color:#9EA8B5;
-}
-body.dark .meta{
-  color:#C3CBD6;
-}
-body.dark .smallText{
-  color:#AEB7C3;
-  opacity:.86;
-}
-body.dark .weekRange,
-body.dark .weekMeta,
-body.dark .statText,
-body.dark .statUnit,
-body.dark .sub{
-  color:#AAB3C0;
-}
-body.dark .run{
-  background:#20291F;
-}
-body.dark .run.done{
-  opacity:.55;
-}
-body.dark .run.done .meta,
-body.dark .run.done .smallText{
-  color:#8E99A8;
+/* --- Clean final design layer --- */
+:root{
+  --doneLight:#7FAE90;
+  --doneDark:#2D4D3A;
+  --doneTextLight:#8F9691;
+  --doneMetaLight:#A7ADA8;
+  --doneTextDark:#7E8982;
+  --doneMetaDark:#7B867F;
 }
 
-
-/* --- v57 polished green/dark design layer --- */
-body.dark{
-  --bg:#06110F;
-  --bg2:#0A1714;
-  --card:#12211C;
-  --ink:#F3FAF6;
-  --muted:#A6B6AE;
-  --line:#263A33;
-  --accent:#5DBB79;
-  --accentDark:#3F8F5F;
-  --accentSoft:#203D2C;
-  --soft:#1B2E27;
-  --shadow:0 14px 32px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.35);
-  background:
-    radial-gradient(circle at 30% 0%, rgba(93,187,121,.14), transparent 38%),
-    linear-gradient(180deg,#07120F,#0A1714 45%,#07120F);
+/* Statistics */
+.statsOverview{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin:12px 0;
 }
-body.dark .card,
-body.dark .statMini,
-body.dark .summaryTile{
-  background:linear-gradient(180deg,rgba(20,35,30,.96),rgba(16,29,24,.96));
-  border-color:rgba(255,255,255,.09);
-  box-shadow:0 12px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+.statsOverview .statMini:first-child{grid-column:1 / -1}
+.statMini{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:var(--shadow);
 }
-body.dark .hero{
-  background:linear-gradient(145deg,#66C784,#3F8F5F);
-  color:#F8FFF9;
-  box-shadow:0 16px 36px rgba(20,95,58,.32);
+.statMini .eyebrow{margin-bottom:10px}
+.statNumber{
+  font-size:42px;
+  line-height:.95;
+  font-weight:850;
+  letter-spacing:-1.5px;
+  color:var(--ink);
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  white-space:nowrap;
 }
-body.dark .hero .eyebrow{color:rgba(255,255,255,.74)}
-body.dark .hero .btn.secondary{
-  background:rgba(20,24,22,.82);
-  color:#fff;
+.statsOverview .statMini:not(:first-child) .statNumber{font-size:38px}
+.statUnit{
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:0;
+  color:var(--muted);
 }
-body.dark h1,
-body.dark h2,
-body.dark h3,
-body.dark label,
-body.dark .weekTitle,
-body.dark .runDist,
-body.dark .statNumber,
-body.dark .summaryValue,
-body.dark .forwardNumber,
-body.dark .big{
-  color:#F5FAF6;
-}
-body.dark .sub,
-body.dark .weekRange,
-body.dark .weekMeta,
-body.dark .statText,
-body.dark .statLabel,
-body.dark .statUnit,
-body.dark .summaryUnit,
-body.dark .smallText,
-body.dark .nextMeta,
-body.dark .nextNote{
-  color:#AAB8B0;
-}
-body.dark .dayName{
-  color:#C7D2CC;
-}
-body.dark .dayName.today{
-  color:#75D892;
-}
-body.dark .dayNum{
-  color:#94A49B;
-}
-body.dark .dayLine{
-  border-top-color:rgba(255,255,255,.12);
-  opacity:1;
-}
-body.dark .plus{
-  color:#7E9188;
-}
-body.dark .run{
-  background:linear-gradient(180deg,#15231F,#111D19);
-  border-color:rgba(255,255,255,.09);
-  box-shadow:0 8px 20px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
-}
-body.dark .run.done{
-  opacity:.54;
-}
-body.dark .meta{
-  color:#CAD5CF;
-}
-body.dark .run.done .meta,
-body.dark .run.done .smallText{
-  color:#87968D;
-}
-body.dark input,
-body.dark select,
-body.dark textarea{
-  background:#201D1A;
-  color:#F4F0EC;
-  border-color:#385047;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-body.dark input::placeholder,
-body.dark textarea::placeholder{
-  color:#7E7770;
-}
-body.dark .sheet{
-  background:#FAFAF8;
-  color:#2C2925;
-  box-shadow:0 -20px 60px rgba(0,0,0,.34);
-}
-body.dark .sheet h2{
-  color:#2C2925;
-}
-body.dark .sheet label{
-  color:#504B45;
-}
-body.dark .sheet input,
-body.dark .sheet select,
-body.dark .sheet textarea{
-  background:#201D1A;
-  color:#F4F0EC;
-  border-color:#375043;
-}
-body.dark .sheet .smallText{
-  color:#7E8580;
-}
-body.dark .sheet hr{
-  border-top-color:#2C2B28;
-}
-body.dark .btn{
-  background:var(--accent);
-  color:#fff;
-}
-body.dark .btn.secondary{
-  background:#243126;
-  color:#EAF5EF;
-  border:1px solid rgba(93,187,121,.24);
-}
-body.dark .btn.danger,
-body.dark .textAction.danger{
-  color:#E06B6B;
-}
-body.dark .backupActions .btn{
-  background:#203028;
-  color:#EEF8F0;
-}
-body.dark .menuBtn,
-body.dark .actionMenu{
-  background:#14211D;
-  color:#F0F7F2;
-  border-color:rgba(255,255,255,.10);
-}
-body.dark .actionItem{
-  color:#F0F7F2;
-}
-body.dark .actionItem:active{
-  background:#1E3028;
-}
-body.dark .statBar,
-body.dark .barIn{
-  background:rgba(93,187,121,.26);
-}
-body.dark .statBar.current,
-body.dark .barIn.now{
-  background:linear-gradient(180deg,#69C988,#3F8F5F);
-}
-body.dark .statBarValue,
-body.dark .barVal,
-body.dark .statBarLabel,
-body.dark .barDate{
-  color:#ADB9B1;
-}
-body.dark .typeDot{
-  box-shadow:0 0 0 3px rgba(255,255,255,.035);
-}
-body.dark .listLine,
-body.dark .statTypeRow,
-body.dark .typeRow{
-  border-top-color:rgba(255,255,255,.10);
-}
-body.dark .toast{
-  background:#F4FAF6;
-  color:#101610;
-}
-
-/* Modal polish also affects light mode a bit */
-.sheet{
-  border-radius:26px 26px 0 0;
-}
-.dragHandle{
-  width:44px;
-  height:5px;
-  background:#D7D4CF;
-  margin-bottom:22px;
-}
-.sheet h2{
-  font-size:32px;
-  letter-spacing:-.9px;
-  margin-bottom:22px;
-}
-label{
+.statText{
+  margin-top:8px;
+  color:var(--muted);
   font-size:14px;
-  font-weight:800;
-  margin:16px 0 7px;
+  line-height:1.3;
 }
-input,select,textarea{
-  border-radius:13px;
-  min-height:46px;
+.statChart{
+  padding:16px 0 16px 16px;
+  overflow:hidden;
 }
-.actions .btn{
-  min-height:52px;
-  border-radius:13px;
+.statChart .eyebrow{
+  margin-right:16px;
+  margin-bottom:18px;
 }
-.moveRow .btn{
-  min-height:46px;
-}
-.hero{
-  padding:20px 18px 22px;
-}
-.hero .big{
-  line-height:1.02;
-}
-.card{
-  border-radius:18px;
-}
-.statMini,
-.statCard,
-.summaryTile{
-  border-radius:18px;
-}
-.statBars,
-.bars{
+.statBars{
+  display:flex;
+  align-items:flex-end;
+  gap:16px;
+  overflow-x:auto;
+  padding:24px 16px 2px 0;
+  scroll-snap-type:x proximity;
   scrollbar-width:none;
 }
-.statBars::-webkit-scrollbar,
-.bars::-webkit-scrollbar{
-  display:none;
+.statBars::-webkit-scrollbar{display:none}
+.statBarItem{
+  min-width:50px;
+  text-align:center;
+  color:#8f857d;
+  scroll-snap-align:start;
+}
+.statBarTrack{
+  height:112px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.statBar{
+  width:42px;
+  background:#E4EAF3;
+  border-radius:11px 11px 0 0;
+  position:relative;
+}
+.statBar.current{background:var(--accent)}
+.statBarValue{
+  position:absolute;
+  top:-23px;
+  left:0;
+  right:0;
+  font-size:12px;
+  font-weight:750;
+  color:#8f857d;
+}
+.statBarLabel{
+  margin-top:8px;
+  font-size:12px;
+  color:#8f857d;
+  white-space:nowrap;
 }
 
-
-/* --- v58 mockup-inspired dark modal + type cards --- */
+/* Type cards */
 .typeIcon{
   width:34px;
   height:34px;
@@ -590,20 +388,13 @@ input,select,textarea{
   stroke-linejoin:round;
 }
 .typeIcon svg path,
-.typeIcon svg circle{
-  vector-effect:non-scaling-stroke;
-}
-.typeIcon svg path:not([fill="none"]){
-  fill:currentColor;
-  stroke:none;
-}
+.typeIcon svg circle{vector-effect:non-scaling-stroke}
+.typeIcon svg path:not([fill="none"]),
 .typeIcon svg circle{
   fill:currentColor;
   stroke:none;
 }
-.typeCards{
-  margin-top:10px;
-}
+.typeCards{margin-top:10px}
 .typeCard{
   display:flex;
   align-items:center;
@@ -612,9 +403,7 @@ input,select,textarea{
   padding:14px 0;
   border-top:1px solid var(--line);
 }
-.typeCard:first-child{
-  border-top:0;
-}
+.typeCard:first-child{border-top:0}
 .typeInfo{
   display:flex;
   align-items:center;
@@ -640,267 +429,7 @@ input,select,textarea{
   font-weight:600;
 }
 
-/* Better next-pass contrast */
-.hero .nextMeta{
-  color:rgba(255,255,255,.86);
-  opacity:1;
-}
-.hero .nextNote{
-  color:rgba(255,255,255,.74);
-  opacity:1;
-}
-
-/* Existing modal becomes app-like in dark mode */
-body.dark .modal{
-  background:rgba(0,0,0,.35);
-}
-body.dark .sheet{
-  background:
-    radial-gradient(circle at 30% 0%, rgba(93,187,121,.10), transparent 34%),
-    linear-gradient(180deg,#0D1815,#0A1411);
-  color:#F3FAF6;
-  border:1px solid rgba(255,255,255,.08);
-  border-bottom:0;
-}
-body.dark .dragHandle{
-  background:rgba(255,255,255,.24);
-}
-body.dark .sheet h2{
-  color:#F3FAF6;
-}
-body.dark .sheet label{
-  color:#DDE7E1;
-  font-weight:700;
-}
-body.dark .sheet input,
-body.dark .sheet select,
-body.dark .sheet textarea{
-  background:rgba(255,255,255,.035);
-  color:#F3FAF6;
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-body.dark .sheet input::placeholder,
-body.dark .sheet textarea::placeholder{
-  color:rgba(243,250,246,.36);
-}
-body.dark .sheet .smallText{
-  color:#AAB8B0;
-}
-body.dark .sheet hr{
-  border-top-color:rgba(255,255,255,.12);
-}
-body.dark .sheet .btn{
-  background:linear-gradient(135deg,#66C784,#4FAF6F);
-}
-body.dark .sheet .btn.secondary{
-  background:transparent;
-  border:1px solid rgba(93,187,121,.55);
-  color:#DDFBE7;
-}
-body.dark .sheet .btn.danger{
-  background:transparent;
-  color:#FF7777;
-}
-
-/* Light modal remains clean but less stark */
-.sheet{
-  background:
-    radial-gradient(circle at 30% 0%, rgba(63,143,95,.06), transparent 34%),
-    #FAFAF8;
-}
-.sheet input,
-.sheet select,
-.sheet textarea{
-  background:#fff;
-}
-body.dark .check{
-  border-color:#66736B;
-}
-body.dark .done .check{
-  background:var(--ok);
-  border-color:var(--ok);
-}
-
-/* Icon-enhanced type card dark refinements */
-body.dark .typeCard{
-  border-top-color:rgba(255,255,255,.10);
-}
-body.dark .typeTitle{
-  color:#F3FAF6;
-}
-body.dark .typeDesc,
-body.dark .typeCount{
-  color:#AAB8B0;
-}
-body.dark .typeIcon{
-  box-shadow:0 9px 18px rgba(0,0,0,.22);
-}
-
-
-/* --- v59 pass-card contrast refinements --- */
-body.dark .run{
-  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98));
-  border-color:rgba(255,255,255,.10);
-}
-body.dark .runDist{
-  color:#F7FCF8;
-}
-body.dark .meta{
-  color:#D2DED7;
-  opacity:.92;
-  font-weight:500;
-}
-body.dark .smallText{
-  color:#B1BDB6;
-  opacity:.78;
-}
-body.dark .run.done{
-  opacity:.48;
-}
-body.dark .run.done .runDist,
-body.dark .run.done .meta,
-body.dark .run.done .smallText{
-  color:#89978F;
-}
-body.dark .run.done .runDist{
-  text-decoration-color:#89978F;
-}
-body.dark .check{
-  border-color:#607068;
-  color:transparent;
-}
-body.dark .done .check{
-  color:white;
-}
-
-/* keep pass metadata calm in light mode too */
-.meta{
-  font-weight:500;
-}
-
-
-/* --- v60 premium dark pass cards --- */
-body.dark .runDist{
-  color:#FFFFFF !important;
-}
-
-body.dark .meta,
-body.dark .runMeta,
-body.dark .runDetails{
-  color:rgba(255,255,255,.92) !important;
-  font-weight:500;
-}
-
-body.dark .meta b,
-body.dark .meta strong{
-  color:#FFFFFF !important;
-}
-
-body.dark .dayName{
-  color:#FFFFFF !important;
-  font-weight:700;
-}
-
-body.dark .dayNum{
-  color:#D6DEE2 !important;
-}
-
-body.dark .weekTitle{
-  color:#FFFFFF !important;
-}
-
-body.dark .weekRange,
-body.dark .weekMeta{
-  color:#C4CDD1 !important;
-}
-
-body.dark .smallText{
-  color:rgba(255,255,255,.72) !important;
-}
-
-body.dark .run{
-  background:linear-gradient(
-    180deg,
-    rgba(22,34,29,.98),
-    rgba(15,25,21,.98)
-  ) !important;
-}
-
-body.dark .run.done{
-  opacity:.5;
-}
-
-
-/* --- v61 hero-only contrast fix --- */
-
-/* Restore regular pass cards */
-body.dark .runDist{color:inherit !important;}
-body.dark .meta,
-body.dark .runMeta,
-body.dark .runDetails{
-  color:#CAD5CF !important;
-}
-body.dark .dayName{
-  color:#C7D2CC !important;
-}
-body.dark .dayNum{
-  color:#94A49B !important;
-}
-body.dark .weekRange,
-body.dark .weekMeta{
-  color:#AAB8B0 !important;
-}
-body.dark .smallText{
-  color:#AAB8B0 !important;
-}
-
-/* Only the top "next pass" widget */
-body.dark .hero .nextMeta{
-  color:#FFFFFF !important;
-  opacity:1 !important;
-  font-weight:500;
-}
-body.dark .hero .nextNote{
-  color:rgba(255,255,255,.82) !important;
-  opacity:1 !important;
-}
-body.dark .hero .smallText{
-  color:rgba(255,255,255,.86) !important;
-}
-
-
-/* --- Swipe delete polish v62 --- */
-.runSwipe{
-  background:var(--danger);
-  border-radius:14px;
-  overflow:hidden;
-  position:relative;
-}
-.deleteReveal{
-  border-radius:14px;
-  right:0;
-  top:0;
-  bottom:0;
-  height:100%;
-}
-.deleteReveal button{
-  border-radius:0 14px 14px 0;
-}
-.run{
-  border-radius:14px;
-  z-index:1;
-}
-.runSwipe.open .run{
-  border-top-right-radius:0;
-  border-bottom-right-radius:0;
-}
-body.dark .runSwipe{
-  background:#B44A4A;
-}
-
-
-/* --- Today marker + completed run polish v63 --- */
+/* Today marker */
 .todayPill{
   display:inline-flex;
   align-items:center;
@@ -914,283 +443,273 @@ body.dark .runSwipe{
   letter-spacing:.5px;
   text-transform:uppercase;
 }
-.dayName.today{
-  color:var(--accent);
+.dayNum.today{color:var(--accentDark)}
+
+/* Swipe delete */
+.runSwipe{
+  background:var(--danger);
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
 }
-.dayNum.today{
-  color:var(--accentDark);
+.deleteReveal{
+  border-radius:14px;
+  right:0;
+  top:0;
+  bottom:0;
+  height:100%;
+}
+.deleteReveal button{border-radius:0 14px 14px 0}
+.run{
+  border-radius:14px;
+  z-index:1;
+}
+.runSwipe.open .run{
+  border-top-right-radius:0;
+  border-bottom-right-radius:0;
 }
 
-/* Completed pass should feel done, not deleted/error */
-.done{
-  opacity:.74;
+/* Completed run */
+.run.done{
+  opacity:1;
+  background:var(--card);
 }
-.done .runDist{
+.run.done:before{background:var(--doneLight)}
+.run.done .check{
+  background:var(--doneLight);
+  border-color:var(--doneLight);
+  color:white;
+  box-shadow:none;
+}
+.run.done .runDist{
+  color:var(--doneTextLight);
+  text-decoration:line-through;
+  text-decoration-color:var(--doneTextLight);
+  text-decoration-thickness:2px;
+  opacity:1;
+}
+.run.done .meta,
+.run.done .smallText{
+  color:var(--doneMetaLight);
+  opacity:1;
   text-decoration:none;
 }
-.done .check{
-  background:var(--ok);
-  border-color:var(--ok);
+
+/* Hero next-pass readability */
+.hero .nextMeta{
+  color:rgba(255,255,255,.9);
+  opacity:1;
+}
+.hero .nextNote{
+  color:rgba(255,255,255,.78);
+  opacity:1;
+}
+
+/* Modal polish */
+.sheet{
+  border-radius:26px 26px 0 0;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(63,143,95,.06), transparent 34%),
+    #FAFAF8;
+}
+.dragHandle{
+  width:44px;
+  height:5px;
+  background:#D7D4CF;
+  margin-bottom:22px;
+}
+.sheet h2{
+  font-size:32px;
+  letter-spacing:-.9px;
+  margin-bottom:22px;
+}
+label{
+  font-size:14px;
+  font-weight:800;
+  margin:16px 0 7px;
+}
+input,select,textarea{
+  border-radius:13px;
+  min-height:46px;
+}
+.actions .btn{
+  min-height:52px;
+  border-radius:13px;
+}
+.moveRow .btn{min-height:46px}
+.hero{padding:20px 18px 22px}
+.hero .big{line-height:1.02}
+.card{border-radius:18px}
+
+/* Dark mode */
+body.dark{
+  --bg:#06110F;
+  --bg2:#0A1714;
+  --card:#12211C;
+  --ink:#F3FAF6;
+  --muted:#A6B6AE;
+  --line:#263A33;
+  --accent:#5DBB79;
+  --accentDark:#3F8F5F;
+  --accentSoft:#203D2C;
+  --soft:#1B2E27;
+  --shadow:0 14px 32px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.35);
+  background:#06110F;
+}
+body.dark .card,
+body.dark .statMini{
+  background:linear-gradient(180deg,rgba(20,35,30,.96),rgba(16,29,24,.96));
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 12px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+}
+body.dark .hero{
+  background:linear-gradient(145deg,#66C784,#3F8F5F);
+  color:#F8FFF9;
+  box-shadow:0 16px 36px rgba(20,95,58,.32);
+}
+body.dark .hero .eyebrow{color:rgba(255,255,255,.74)}
+body.dark .hero .btn.secondary{
+  background:rgba(20,24,22,.82);
   color:#fff;
 }
-.done .meta{
-  color:var(--muted);
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark label,
+body.dark .weekTitle,
+body.dark .big,
+body.dark .statNumber{
+  color:#F5FAF6;
 }
-.done .smallText{
-  opacity:.65;
+body.dark .sub,
+body.dark .weekRange,
+body.dark .weekMeta,
+body.dark .statText,
+body.dark .statUnit,
+body.dark .smallText{
+  color:#AAB8B0;
 }
-body.dark .dayName.today{
-  color:#7EE29B !important;
-}
-body.dark .dayNum.today{
-  color:#FFFFFF !important;
-}
+body.dark .dayName{color:#C7D2CC}
+body.dark .dayName.today{color:#75D892}
+body.dark .dayNum{color:#94A49B}
+body.dark .dayNum.today{color:#FFFFFF}
 body.dark .todayPill{
   background:rgba(126,226,155,.16);
   color:#7EE29B;
 }
-body.dark .done{
-  opacity:.72;
+body.dark .dayLine{
+  border-top-color:rgba(255,255,255,.12);
+  opacity:1;
 }
-body.dark .done .runDist{
-  color:#DDE8E1;
-  text-decoration:none;
+body.dark .plus{color:#7E9188}
+body.dark .run{
+  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98));
+  border-color:rgba(255,255,255,.10);
+  box-shadow:0 8px 20px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.035);
 }
-body.dark .done .meta{
-  color:#AAB8B0 !important;
+body.dark .runDist{color:inherit}
+body.dark .meta,
+body.dark .runMeta,
+body.dark .runDetails{color:#CAD5CF}
+body.dark .run.done{
+  opacity:1;
+  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98));
 }
-body.dark .done .smallText{
-  color:#9AA8A0 !important;
-  opacity:.72;
+body.dark .run.done:before{background:var(--doneDark)}
+body.dark .run.done .check{
+  background:var(--doneDark);
+  border-color:var(--doneDark);
+  color:rgba(255,255,255,.58);
 }
-body.dark .done .check{
-  background:#3F8F5F;
-  border-color:#3F8F5F;
+body.dark .run.done .runDist{
+  color:var(--doneTextDark);
+  text-decoration-color:var(--doneTextDark);
+}
+body.dark .run.done .meta,
+body.dark .run.done .smallText{color:var(--doneMetaDark)}
+body.dark .check{
+  border-color:#66736B;
+  color:transparent;
+}
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#201D1A;
+  color:#F4F0EC;
+  border-color:#385047;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder{color:#7E7770}
+body.dark .modal{background:rgba(0,0,0,.35)}
+body.dark .sheet{
+  background:
+    radial-gradient(circle at 30% 0%, rgba(93,187,121,.10), transparent 34%),
+    linear-gradient(180deg,#0D1815,#0A1411);
+  color:#F3FAF6;
+  border:1px solid rgba(255,255,255,.08);
+  border-bottom:0;
+}
+body.dark .dragHandle{background:rgba(255,255,255,.24)}
+body.dark .sheet h2{color:#F3FAF6}
+body.dark .sheet label{
+  color:#DDE7E1;
+  font-weight:700;
+}
+body.dark .sheet input,
+body.dark .sheet select,
+body.dark .sheet textarea{
+  background:rgba(255,255,255,.035);
+  color:#F3FAF6;
+  border:1px solid rgba(255,255,255,.10);
+}
+body.dark .sheet input::placeholder,
+body.dark .sheet textarea::placeholder{color:rgba(243,250,246,.36)}
+body.dark .sheet hr{border-top-color:rgba(255,255,255,.12)}
+body.dark .btn{
+  background:var(--accent);
   color:#fff;
 }
-
-
-/* --- v64 force completed pass green --- */
-.done .check,
-body.dark .done .check{
-  background:#3F8F5F !important;
-  border-color:#3F8F5F !important;
-  color:#fff !important;
+body.dark .btn.secondary{
+  background:#243126;
+  color:#EAF5EF;
+  border:1px solid rgba(93,187,121,.24);
 }
-.done .runDist,
-body.dark .done .runDist{
-  text-decoration:none !important;
+body.dark .btn.danger,
+body.dark .textAction.danger{color:#E06B6B}
+body.dark .backupActions .btn{
+  background:#203028;
+  color:#EEF8F0;
 }
-
-
-/* --- v65 completed pass background fix --- */
-/* The pink/red came from opacity on the whole card, letting the swipe-delete red background show through. */
-.done,
-body.dark .done{
-  opacity:1 !important;
+body.dark .menuBtn,
+body.dark .actionMenu{
+  background:#14211D;
+  color:#F0F7F2;
+  border-color:rgba(255,255,255,.10);
 }
-
-.done .runDist,
-.done .meta,
-.done .smallText{
-  opacity:.55;
+body.dark .actionItem{color:#F0F7F2}
+body.dark .actionItem:active{background:#1E3028}
+body.dark .statBar{background:rgba(93,187,121,.26)}
+body.dark .statBar.current{background:linear-gradient(180deg,#69C988,#3F8F5F)}
+body.dark .statBarValue,
+body.dark .statBarLabel{color:#ADB9B1}
+body.dark .typeCard{border-top-color:rgba(255,255,255,.10)}
+body.dark .typeTitle{color:#F3FAF6}
+body.dark .typeDesc,
+body.dark .typeCount{color:#AAB8B0}
+body.dark .typeIcon{box-shadow:0 9px 18px rgba(0,0,0,.22)}
+body.dark .toast{
+  background:#F4FAF6;
+  color:#101610;
 }
+body.dark .runSwipe{background:#B44A4A}
 
-body.dark .done .runDist,
-body.dark .done .meta,
-body.dark .done .smallText{
-  opacity:.62;
-}
-
-.done .runDist,
-body.dark .done .runDist{
-  text-decoration:none !important;
-}
-
-.done .check,
-body.dark .done .check{
-  background:#3F8F5F !important;
-  border-color:#3F8F5F !important;
-  color:#fff !important;
-}
-
-/* Keep completed card background neutral/white instead of red/pink */
-.done.run,
-body.dark .done.run{
-  background:var(--card) !important;
-}
-
-body.dark .done.run{
-  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98)) !important;
-}
-
-
-/* v66 remove strike-through on completed distance */
-.done .runDist,
-body.dark .done .runDist{
-  text-decoration:none !important;
-}
-
-
-/* v67 softer completed styling */
-.done .check,
-body.dark .done .check{
-  background:#7FAE90 !important;
-  border-color:#7FAE90 !important;
-}
-
-.done .runAccent,
-body.dark .done .runAccent{
-  background:#8FBE9F !important;
-}
-
-
-/* v68 force completed accent bar to match checkbox */
-.done .runAccent,
-.done .accent,
-.done .typeAccent,
-body.dark .done .runAccent,
-body.dark .done .accent,
-body.dark .done .typeAccent{
-  background:#7FAE90 !important;
-  border-color:#7FAE90 !important;
-}
-
-
-/* v69 force completed left stripe pseudo-element */
-.done.run:before,
-body.dark .done.run:before{
-  background:#7FAE90 !important;
-}
-
-
-/* v72 solid dark background */
-body.dark{
-  background:#06110F !important;
-}
-
-
-/* v76 completed pass: match supplied images */
-/* Completed card stays normal, only text/check/accent are softened. */
-.done,
-body.dark .done{
-  opacity:1 !important;
-}
-
-.done.run{
-  background:var(--card) !important;
-}
-
-body.dark .done.run{
-  background:linear-gradient(180deg,rgba(19,32,28,.98),rgba(14,25,21,.98)) !important;
-}
-
-/* Left stripe and checkbox use the same muted green as the reference. */
-.done.run:before,
-body.dark .done.run:before{
-  background:#7FAE90 !important;
-}
-
-.done .check,
-body.dark .done .check{
-  background:#7FAE90 !important;
-  border-color:#7FAE90 !important;
-  color:#fff !important;
-  box-shadow:none !important;
-}
-
-/* Only the km text is struck through. */
-.done .runDist{
-  color:#8F9691 !important;
-  opacity:1 !important;
-  text-decoration:line-through !important;
-  text-decoration-color:#8F9691 !important;
-  text-decoration-thickness:2px;
-}
-
-body.dark .done .runDist{
-  color:#8E9A91 !important;
-  opacity:1 !important;
-  text-decoration:line-through !important;
-  text-decoration-color:#8E9A91 !important;
-  text-decoration-thickness:2px;
-}
-
-/* Metadata is faded, but not struck through. */
-.done .meta,
-.done .smallText{
-  color:#A7ADA8 !important;
-  opacity:1 !important;
-  text-decoration:none !important;
-}
-
-body.dark .done .meta,
-body.dark .done .smallText{
-  color:#89968E !important;
-  opacity:1 !important;
-  text-decoration:none !important;
-}
-
-
-/* v77 darker completed colors in dark mode only */
-body.dark .done.run:before{
-  background:#4F7F61 !important;
-}
-
-body.dark .done .check{
-  background:#4F7F61 !important;
-  border-color:#4F7F61 !important;
-}
-
-
-/* v78 slightly darker completed colors in dark mode */
-body.dark .done.run:before{
-  background:#3F6B50 !important;
-}
-
-body.dark .done .check{
-  background:#3F6B50 !important;
-  border-color:#3F6B50 !important;
-}
-
-
-/* v79 darker completed accent + softer check icon */
-body.dark .done.run:before{
-  background:#345843 !important;
-}
-
-body.dark .done .check{
-  background:#345843 !important;
-  border-color:#345843 !important;
-  color:rgba(255,255,255,.78) !important;
-}
-
-
-/* v80 final completed-card tuning */
-body.dark .done.run:before{
-  background:#2D4D3A !important;
-}
-
-body.dark .done .check{
-  background:#2D4D3A !important;
-  border-color:#2D4D3A !important;
-  color:rgba(255,255,255,.58) !important;
-}
-
-/* completed text slightly dimmer */
-body.dark .done .runDist{
-  color:#7E8982 !important;
-  text-decoration-color:#7E8982 !important;
-}
-
-body.dark .done .meta{
-  color:#7B867F !important;
-}
-
-body.dark .done .smallText{
-  color:#727D77 !important;
-}
-
+/* Theme switch */
+.themeItem{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch{width:40px;height:23px;border-radius:999px;background:#ded6ce;position:relative;flex:0 0 auto;transition:background .2s ease}
+.switch:after{content:"";position:absolute;width:19px;height:19px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .2s ease}
+body.dark .switch{background:var(--accent)}
+body.dark .switch:after{transform:translateX(17px)}
 </style>
 <script>
 (function(){
