@@ -1123,6 +1123,25 @@ body.dark .menuSyncIcon{
 .syncStatusText{font-size:13px;color:var(--muted);margin-top:4px}
 @keyframes syncSpin{to{transform:rotate(360deg)}}
 
+
+/* Cloud sync */
+.menuCloudItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.cloudMenuDot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  background:#C7CFC9;
+  flex:0 0 auto;
+}
+.cloudMenuDot.online{background:var(--accent)}
+.cloudMenuDot.saving{background:#E0A024}
+.cloudMenuDot.error{background:var(--danger)}
+
 </style>
 <script>
 (function(){
@@ -1158,6 +1177,12 @@ body.dark .menuSyncIcon{
                 <span class="switch" aria-hidden="true"></span>
               </button>
               <button class="actionItem" onclick="exportSchedulePdf();closeActionMenu()">Exportera PDF</button>
+              <div class="menuSectionLabel">Moln</div>
+              <button class="actionItem menuCloudItem" onclick="cloudMenuAction();closeActionMenu()">
+                <span id="cloudMenuText">Logga in / synka</span>
+                <span id="cloudMenuDot" class="cloudMenuDot"></span>
+              </button>
+              <button class="actionItem" onclick="signOutCloud();closeActionMenu()" id="cloudSignOutBtn" style="display:none">Logga ut från molnet</button>
               <div class="menuSectionLabel">Garmin</div>
               <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
               <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
@@ -1250,6 +1275,7 @@ body.dark .menuSyncIcon{
 </div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
 const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848"};
@@ -1286,7 +1312,15 @@ function typeIconSvg(type){
 }
 
 const KEY="runplanner.v4";
+const LOCAL_UPDATED_KEY="runplanner.v4.updatedAt";
+const SUPABASE_URL="https://dxxcxuphjixzjeipaota.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4eGN4dXBoaml4emplaXBhb3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwODgzNDMsImV4cCI6MjA5NjY2NDM0M30.eTxfL4hp5B0JpKco_ZUzgUccI9YJ4z3ltP6LscXE-IE";
 let state=load(); let showPastWeeks=false;
+let supabaseClient=null;
+let cloudUser=null;
+let cloudLoading=false;
+let cloudSaveTimer=null;
+let cloudInitialLoaded=false;
 let view=0,startX=0,lastEdited=null;
 
 function demoState(){
@@ -1319,7 +1353,12 @@ function demoState(){
   return {goal:{name:"Stockholm Marathon",date:iso(addDays(base,48))},runs};
 }
 function load(){const saved=localStorage.getItem(KEY); if(saved) return JSON.parse(saved); return demoState();}
-function persist(){localStorage.setItem(KEY,JSON.stringify(state));render();}
+function persist(){
+  localStorage.setItem(KEY,JSON.stringify(state));
+  localStorage.setItem(LOCAL_UPDATED_KEY,new Date().toISOString());
+  render();
+  scheduleCloudSave();
+}
 function iso(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
 function addDays(d,n){let x=new Date(d);x.setDate(x.getDate()+n);return x}
 function parse(d){let [y,m,da]=d.split("-").map(Number);return new Date(y,m-1,da)}
@@ -1343,7 +1382,207 @@ function formatDuration(mins){
 function minsFrom(km,pace){let p=parsePace(pace);return km&&p?Math.round(km*p):0}
 function parsePace(p){if(!p)return 0;let [m,s="0"]=String(p).trim().replace(",",":").replace(".",":").replace(";",":").split(":");return Number(m)+Number(s)/60}
 function sum(a,k){return a.reduce((s,r)=>s+Number(r[k]||0),0)}
+function effectiveKm(r){return Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0)}
+function sumKm(a){return a.reduce((s,r)=>s+effectiveKm(r),0)}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+
+
+function updateCloudUi(status="idle"){
+  const text=document.getElementById("cloudMenuText");
+  const dot=document.getElementById("cloudMenuDot");
+  const signOut=document.getElementById("cloudSignOutBtn");
+  if(!text||!dot)return;
+
+  dot.classList.remove("online","saving","error");
+
+  if(!supabaseClient){
+    text.textContent="Moln ej laddat";
+    dot.classList.add("error");
+    if(signOut)signOut.style.display="none";
+    return;
+  }
+
+  if(cloudUser){
+    const email=cloudUser.email||"inloggad";
+    text.textContent=status==="saving" ? "Sparar till molnet..." : `Synkad: ${email}`;
+    dot.classList.add(status==="saving"?"saving":"online");
+    if(signOut)signOut.style.display="block";
+  }else{
+    text.textContent="Logga in / synka";
+    if(signOut)signOut.style.display="none";
+  }
+}
+function initSupabase(){
+  try{
+    if(!window.supabase||!window.supabase.createClient){
+      updateCloudUi("error");
+      return;
+    }
+
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    updateCloudUi();
+
+    supabaseClient.auth.getSession().then(({data})=>{
+      cloudUser=data&&data.session&&data.session.user ? data.session.user : null;
+      updateCloudUi();
+      if(cloudUser&&!cloudInitialLoaded) loadCloudState();
+    });
+
+    supabaseClient.auth.onAuthStateChange((event,session)=>{
+      cloudUser=session&&session.user ? session.user : null;
+      updateCloudUi();
+      if(cloudUser&&(event==="SIGNED_IN"||event==="TOKEN_REFRESHED")&&!cloudInitialLoaded){
+        loadCloudState();
+      }
+    });
+  }catch(e){
+    console.error(e);
+    updateCloudUi("error");
+  }
+}
+function cloudMenuAction(){
+  if(!supabaseClient){
+    toastMsg("Molnet kunde inte laddas");
+    return;
+  }
+  if(cloudUser){
+    saveCloudState(true);
+  }else{
+    signInCloud();
+  }
+}
+async function signInCloud(){
+  if(!supabaseClient)return;
+  const email=prompt("Ange e-post för att logga in och synka till molnet");
+  if(!email)return;
+
+  try{
+    const {data,error}=await supabaseClient.auth.signInWithOtp({
+      email:email.trim(),
+      options:{
+        emailRedirectTo:"https://jespernyhlen.github.io/run-plan/"
+      }
+    });
+
+    if(error){
+      console.error("Supabase login error", error);
+      throw error;
+    }
+
+    console.log("Supabase login response", data);
+    toastMsg("Kolla mejlen för inloggningslänk");
+  }catch(e){
+    console.error(e);
+    const msg=String(e.message||e||"Okänt fel");
+    toastMsg("Inloggningsfel: "+msg.slice(0,90));
+  }
+}
+async function signOutCloud(){
+  if(!supabaseClient)return;
+  try{
+    await supabaseClient.auth.signOut();
+    cloudUser=null;
+    cloudInitialLoaded=false;
+    updateCloudUi();
+    toastMsg("Utloggad från molnet");
+  }catch(e){
+    console.error(e);
+    toastMsg("Kunde inte logga ut");
+  }
+}
+async function loadCloudState(){
+  if(!supabaseClient||!cloudUser||cloudLoading)return;
+  cloudLoading=true;
+  try{
+    const {data,error}=await supabaseClient
+      .from("app_state")
+      .select("data,updated_at")
+      .eq("user_id",cloudUser.id)
+      .maybeSingle();
+
+    if(error)throw error;
+
+    const localRaw=localStorage.getItem(KEY);
+    const localUpdated=localStorage.getItem(LOCAL_UPDATED_KEY)||"";
+    const hasLocal=!!localRaw;
+    const hasCloud=!!(data&&data.data&&Array.isArray(data.data.runs));
+
+    if(hasCloud&&hasLocal){
+      const cloudUpdated=data.updated_at||"";
+      const localIsDifferent=JSON.stringify(JSON.parse(localRaw))!==JSON.stringify(data.data);
+
+      if(localIsDifferent&&localUpdated&&cloudUpdated){
+        const cloudDate=new Date(cloudUpdated);
+        const localDate=new Date(localUpdated);
+        const useLocal=localDate>cloudDate
+          ? confirm("Du har nyare data lokalt än i molnet. Vill du ladda upp den lokala versionen till molnet?")
+          : !confirm("Det finns molndata som skiljer sig från denna enhet. Vill du behålla lokal data? Tryck Avbryt för att hämta molndata.");
+
+        if(useLocal){
+          state=JSON.parse(localRaw);
+          await saveCloudState(true);
+        }else{
+          state=data.data;
+          localStorage.setItem(KEY,JSON.stringify(state));
+          localStorage.setItem(LOCAL_UPDATED_KEY,cloudUpdated||new Date().toISOString());
+          render();
+          toastMsg("Schema laddat från molnet");
+        }
+      }else{
+        state=data.data;
+        localStorage.setItem(KEY,JSON.stringify(state));
+        localStorage.setItem(LOCAL_UPDATED_KEY,cloudUpdated||new Date().toISOString());
+        render();
+        toastMsg("Schema laddat från molnet");
+      }
+    }else if(hasCloud){
+      state=data.data;
+      localStorage.setItem(KEY,JSON.stringify(state));
+      localStorage.setItem(LOCAL_UPDATED_KEY,data.updated_at||new Date().toISOString());
+      render();
+      toastMsg("Schema laddat från molnet");
+    }else{
+      await saveCloudState(true);
+    }
+
+    cloudInitialLoaded=true;
+  }catch(e){
+    console.error(e);
+    updateCloudUi("error");
+    toastMsg("Kunde inte läsa från molnet");
+  }finally{
+    cloudLoading=false;
+    updateCloudUi();
+  }
+}
+function scheduleCloudSave(){
+  if(!cloudUser||!supabaseClient)return;
+  clearTimeout(cloudSaveTimer);
+  updateCloudUi("saving");
+  cloudSaveTimer=setTimeout(()=>saveCloudState(false),700);
+}
+async function saveCloudState(showToast=false){
+  if(!supabaseClient||!cloudUser)return;
+  try{
+    updateCloudUi("saving");
+    const {error}=await supabaseClient
+      .from("app_state")
+      .upsert({
+        user_id:cloudUser.id,
+        data:state,
+        updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+
+    if(error)throw error;
+    localStorage.setItem(LOCAL_UPDATED_KEY,new Date().toISOString());
+    updateCloudUi();
+    if(showToast)toastMsg("Sparat till molnet");
+  }catch(e){
+    console.error(e);
+    updateCloudUi("error");
+    toastMsg("Kunde inte spara till molnet");
+  }
+}
 
 function go(i){view=i;slider.style.transform=`translateX(-${i*50}%)`}
 document.addEventListener("touchstart",e=>startX=e.touches[0].clientX,{passive:true});
@@ -1405,7 +1644,7 @@ function renderSchema(){
   for(let w=new Date(minDate);w<=maxDate;w=addDays(w,7)){
     let days=[0,1,2,3,4,5,6].map(n=>addDays(w,n));
     let weekRuns=all.filter(r=>parse(r.date)>=days[0]&&parse(r.date)<=days[6]);
-    let weekKm=sum(weekRuns,"distansKm");
+    let weekKm=sumKm(weekRuns);
     html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitleRow"><div class="weekTitle">Vecka ${weekNo(w)}</div><div class="weekRange">${shortDate(iso(days[0]))}–${shortDate(iso(days[6]))}</div></div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
     days.forEach(d=>{
       let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
@@ -1455,7 +1694,7 @@ function renderStats(){
   goalName.value=state.goal.name||"";goalDate.value=state.goal.date||"";
 
   let weekKm={};
-  future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+Number(r.distansKm||0)});
+  future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
   let entries=Object.entries(weekKm).sort();
   let max=Math.max(20,...entries.map(e=>e[1]));
   let bars=entries.map(([k,v],i)=>{
@@ -1475,7 +1714,7 @@ function renderStats(){
       </div>
       <div class="statMini">
         <div class="eyebrow">Distans</div>
-        <div class="statNumber">${sum(future,'distansKm').toFixed(0)} <span class="statUnit">km</span></div>
+        <div class="statNumber">${sumKm(future).toFixed(0)} <span class="statUnit">km</span></div>
         <div class="statText">kvar</div>
       </div>
       <div class="statMini">
@@ -1686,7 +1925,7 @@ async function exportSchedulePdf(){
     Object.entries(byWeek).sort().forEach(([weekStart,runs])=>{
       const start=parse(weekStart);
       const end=addDays(start,6);
-      const weekKm=sum(runs,"distansKm").toFixed(0);
+      const weekKm=sumKm(runs).toFixed(0);
 
       // Estimate week height
       let weekH=21;
@@ -2065,6 +2304,7 @@ function toggleDarkMode(event){
 applyTheme();
 
 render();
+initSupabase();
 </script>
 </body>
 </html>
