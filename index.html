@@ -1171,21 +1171,24 @@ body.dark .menuSyncIcon{
               </svg>
             </button>
             <div class="actionMenu" id="actionMenu">
+              <div class="menuSectionLabel">Inloggning</div>
+              <button class="actionItem menuCloudItem" onclick="cloudMenuAction();closeActionMenu()">
+                <span id="cloudMenuText">Logga in</span>
+                <span id="cloudMenuDot" class="cloudMenuDot"></span>
+              </button>
+              <button class="actionItem" onclick="signOutCloud();closeActionMenu()" id="cloudSignOutBtn" style="display:none">Logga ut</button>
+
+              <div class="menuSectionLabel">Garmin</div>
+              <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
+              <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
+
+              <div class="menuSectionLabel">Inställningar</div>
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
               <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
               </button>
               <button class="actionItem" onclick="exportSchedulePdf();closeActionMenu()">Exportera PDF</button>
-              <div class="menuSectionLabel">Moln</div>
-              <button class="actionItem menuCloudItem" onclick="cloudMenuAction();closeActionMenu()">
-                <span id="cloudMenuText">Logga in / synka</span>
-                <span id="cloudMenuDot" class="cloudMenuDot"></span>
-              </button>
-              <button class="actionItem" onclick="signOutCloud();closeActionMenu()" id="cloudSignOutBtn" style="display:none">Logga ut från molnet</button>
-              <div class="menuSectionLabel">Garmin</div>
-              <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
-              <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
             </div>
           </div>
         </div>
@@ -1404,11 +1407,11 @@ function updateCloudUi(status="idle"){
 
   if(cloudUser){
     const email=cloudUser.email||"inloggad";
-    text.textContent=status==="saving" ? "Sparar till molnet..." : `Synkad: ${email}`;
+    text.textContent=status==="saving" ? "Sparar till molnet..." : `Inloggad: ${email}`;
     dot.classList.add(status==="saving"?"saving":"online");
     if(signOut)signOut.style.display="block";
   }else{
-    text.textContent="Logga in / synka";
+    text.textContent="Logga in";
     if(signOut)signOut.style.display="none";
   }
 }
