@@ -1,6 +1,6 @@
 {
-  "name": "Löpschema",
-  "short_name": "Löpschema",
+  "name": "Löpplan",
+  "short_name": "Löpplan",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
