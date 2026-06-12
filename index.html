@@ -2455,11 +2455,37 @@ function formatGarminDate(dateString){
   return parse(dateString).toLocaleDateString("sv-SE",{weekday:"long",day:"numeric",month:"long"});
 }
 
+function garminDuplicateKey(g){
+  return [
+    g.date||"",
+    Number(g.distanceKm||0).toFixed(2),
+    Number(g.timeMin||0)
+  ].join("|");
+}
+
+function isGarminAlreadySynced(gr){
+  return state.runs.some(r=>{
+    if(!r.garmin) return false;
+
+    if(gr.garminId && r.garmin.id && String(r.garmin.id)===String(gr.garminId)){
+      return true;
+    }
+
+    return garminDuplicateKey({
+      date:r.date,
+      distanceKm:r.garmin.distanceKm,
+      timeMin:r.garmin.timeMin
+    })===garminDuplicateKey(gr);
+  });
+}
+
 function matchGarminRuns(garminRuns){
   const usedRunIds=new Set();
   const matches=[];
 
   garminRuns.forEach(gr=>{
+    if(isGarminAlreadySynced(gr)) return;
+
     const sameDay=state.runs.filter(r=>!r.genomfort && r.date===gr.date && !usedRunIds.has(String(r.id)));
 
     let planned=null;
@@ -2482,7 +2508,17 @@ function matchGarminRuns(garminRuns){
         status:"pending",
         plannedId:planned.id,
         planned,
-        garmin:gr
+        garmin:gr,
+        unmatched:false
+      });
+    }else{
+      matches.push({
+        id:`unmatched-${gr.garminId||Math.random()}`,
+        status:"pending",
+        plannedId:null,
+        planned:null,
+        garmin:gr,
+        unmatched:true
       });
     }
   });
@@ -2549,10 +2585,11 @@ function renderGarminModal(){
   const active=garminPendingMatches.filter(m=>m.status!=="rejected");
   const pending=garminPendingMatches.filter(m=>m.status==="pending");
 
-  garminModalTitle.textContent=`${active.length} pass matchades`;
-  garminModalIntro.textContent=active.length
-    ?"Bekräfta att rätt pass har matchats."
-    :"Inga matchningar kvar att bekräfta.";
+  const unmatchedCount=garminPendingMatches.filter(m=>m.unmatched).length;
+  garminModalTitle.textContent=`${active.length} Garmin-pass hittades`;
+  garminModalIntro.textContent=unmatchedCount
+    ?`${unmatchedCount} pass saknar planering och kan importeras.`
+    :"Bekräfta matchade pass.";
 
   garminMatches.innerHTML=garminPendingMatches.length ? garminPendingMatches.map((m,i)=>{
     const p=m.planned;
@@ -2567,11 +2604,16 @@ function renderGarminModal(){
       </div>
 
       <div class="garminCompare">
+        ${m.unmatched ? `
+        <div class="garminPlanBox">
+          <div class="garminPlanTitle">Ej planerat pass</div>
+          <div class="garminPlanMain">Importeras som genomfört pass</div>
+        </div>` : `
         <div class="garminPlanBox">
           <div class="garminPlanTitle">Planerat pass</div>
           <div class="garminPlanMain">${p.type} · ${p.distansKm} km</div>
           <div class="garminPlanMeta">${formatDuration(p.tidMinuter)} · ${p.tempoPerKm}/km</div>
-        </div>
+        </div>`}
 
         <div class="garminActualBox">
           <div class="garminActualTitle">Garmin-aktivitet</div>
@@ -2607,6 +2649,28 @@ function closeGarminModal(){
 }
 
 function applyGarminMatch(match){
+  if(match.unmatched){
+    state.runs.push({
+      id:Date.now()+Math.random(),
+      date:match.garmin.date,
+      type:"Distanspass",
+      distansKm:Number(match.garmin.distanceKm||0),
+      tidMinuter:Number(match.garmin.timeMin||0),
+      tempoPerKm:match.garmin.pace||"",
+      genomfort:true,
+      anteckning:match.garmin.name||"Importerat från Garmin",
+      garmin:{
+        id:match.garmin.garminId||"",
+        name:match.garmin.name||"",
+        distanceKm:match.garmin.distanceKm||0,
+        timeMin:match.garmin.timeMin||0,
+        pace:match.garmin.pace||"",
+        syncedAt:new Date().toISOString()
+      }
+    });
+    return true;
+  }
+
   const run=state.runs.find(r=>String(r.id)===String(match.plannedId));
   if(!run) return false;
 
