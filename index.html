@@ -1253,6 +1253,7 @@ body.dark .menuSyncIcon{
 
               <div class="menuSectionLabel">Inställningar</div>
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
+              <button class="actionItem" onclick="toggleEmptyDays();closeActionMenu()" id="emptyDaysBtn">Dölj dagar utan pass</button>
               <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
@@ -1385,9 +1386,13 @@ function typeIconSvg(type){
 
 const KEY="runplanner.v4";
 const LOCAL_UPDATED_KEY="runplanner.v4.updatedAt";
+const SHOW_PAST_WEEKS_KEY="runplanner.showPastWeeks";
+const SHOW_EMPTY_DAYS_KEY="runplanner.showEmptyDays";
 const SUPABASE_URL="https://dxxcxuphjixzjeipaota.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4eGN4dXBoaml4emplaXBhb3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwODgzNDMsImV4cCI6MjA5NjY2NDM0M30.eTxfL4hp5B0JpKco_ZUzgUccI9YJ4z3ltP6LscXE-IE";
-let state=load(); let showPastWeeks=false;
+let state=load();
+let showPastWeeks=localStorage.getItem(SHOW_PAST_WEEKS_KEY)==="true";
+let showEmptyDays=localStorage.getItem(SHOW_EMPTY_DAYS_KEY)!=="false";
 let supabaseClient=null;
 let cloudUser=null;
 let cloudLoading=false;
@@ -1677,6 +1682,12 @@ document.addEventListener("click",e=>{
 });
 function togglePastWeeks(){
   showPastWeeks=!showPastWeeks;
+  localStorage.setItem(SHOW_PAST_WEEKS_KEY,showPastWeeks?"true":"false");
+  render();
+}
+function toggleEmptyDays(){
+  showEmptyDays=!showEmptyDays;
+  localStorage.setItem(SHOW_EMPTY_DAYS_KEY,showEmptyDays?"true":"false");
   render();
 }
 function render(){
@@ -1712,6 +1723,10 @@ function renderSchema(){
   if(btn){
     btn.textContent=showPastWeeks ? 'Dölj tidigare veckor' : 'Visa tidigare veckor';
   }
+  const emptyBtn=document.getElementById('emptyDaysBtn');
+  if(emptyBtn){
+    emptyBtn.textContent=showEmptyDays ? 'Dölj dagar utan pass' : 'Visa dagar utan pass';
+  }
   let html="";
   for(let w=new Date(minDate);w<=maxDate;w=addDays(w,7)){
     let days=[0,1,2,3,4,5,6].map(n=>addDays(w,n));
@@ -1720,6 +1735,7 @@ function renderSchema(){
     html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitleRow"><div class="weekTitle">Vecka ${weekNo(w)}</div><div class="weekRange">${shortDate(iso(days[0]))}–${shortDate(iso(days[6]))}</div></div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
     days.forEach(d=>{
       let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
+      if(!showEmptyDays && !rs.length) return;
       html+=`<div class="day"><div class="dayName ${isToday?'today':''}">${weekday(d)}<span class="dayNum ${isToday?'today':''}">${d.getDate()}</span>${isToday?'<span class="todayPill">Idag</span>':''}</div><div class="dayLine"></div><div class="plus" onclick="openRun('${ds}')">+</div>`;
       if(rs.length){rs.forEach(r=>html+=runCard(r));}
       html+=`</div>`;
