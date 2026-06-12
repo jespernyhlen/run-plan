@@ -1250,6 +1250,164 @@ body.dark .inlineSyncStatus{
   border-color:rgba(255,255,255,.09);
 }
 
+
+/* Compact weekly volume chart */
+.volumeChart .bar{width:30px!important}
+.volumeChart,.barWrap{gap:4px!important}
+
+/* Compact KPI row */
+.statsOverview{
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:8px!important;
+  margin:8px 0 10px!important;
+}
+.statsOverview .statMini:first-child{
+  grid-column:auto!important;
+}
+.statMini{
+  padding:11px 8px!important;
+  border-radius:14px!important;
+}
+.statMini .eyebrow{
+  margin-bottom:6px!important;
+  font-size:9px!important;
+  letter-spacing:1.2px!important;
+}
+.statNumber{
+  font-size:27px!important;
+  letter-spacing:-.7px!important;
+  gap:3px!important;
+  justify-content:flex-start;
+}
+.statsOverview .statMini:not(:first-child) .statNumber{
+  font-size:27px!important;
+}
+.statUnit{
+  font-size:12px!important;
+}
+.statText{
+  display:none!important;
+}
+@media(max-width:370px){
+  .statNumber{font-size:24px!important}
+  .statsOverview .statMini:not(:first-child) .statNumber{font-size:24px!important}
+  .statMini{padding:10px 6px!important}
+}
+
+
+/* Slightly tighter, less rounded UI */
+.card,
+.hero,
+.run,
+.runSwipe,
+.garminMatch,
+.garminPlanBox,
+.garminActualBox,
+.garminInfoBox,
+.inlineSyncStatus,
+.statMini,
+.actionMenu,
+.actionItem,
+.btn,
+input,
+select,
+textarea{
+  border-radius:12px!important;
+}
+.sheet,
+.garminSheet{
+  border-radius:20px 20px 0 0!important;
+}
+.check,
+.garminIcon,
+.menuBtn{
+  border-radius:8px!important;
+}
+
+/* Better compact KPI cards */
+.statsOverview{
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:7px!important;
+  margin:8px 0 10px!important;
+}
+.statsOverview .statMini:first-child{
+  grid-column:auto!important;
+}
+.statMini{
+  padding:9px 7px!important;
+  min-width:0;
+}
+.statMini .eyebrow{
+  margin-bottom:5px!important;
+  font-size:8.5px!important;
+  letter-spacing:.8px!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.statNumber{
+  font-size:25px!important;
+  line-height:1!important;
+  letter-spacing:-.6px!important;
+  gap:3px!important;
+  white-space:nowrap;
+}
+.statsOverview .statMini:not(:first-child) .statNumber{
+  font-size:25px!important;
+}
+.statUnit{
+  font-size:11px!important;
+}
+.statText{
+  display:none!important;
+}
+@media(max-width:370px){
+  .statsOverview{gap:6px!important}
+  .statMini{padding:8px 6px!important}
+  .statNumber,
+  .statsOverview .statMini:not(:first-child) .statNumber{
+    font-size:23px!important;
+  }
+  .statUnit{font-size:10px!important}
+}
+
+
+/* Equal padding in KPI widgets */
+.statMini{
+  padding:10px!important;
+}
+.statMini .eyebrow,
+.statMini .statNumber,
+.statMini .statText,
+.statMini .statUnit{
+  margin-left:0!important;
+  padding-left:0!important;
+}
+
+
+/* Much denser weekly volume chart */
+.volumeChart .bar,
+.chart .bar{
+  width:20px!important;
+  min-width:20px!important;
+}
+
+.volumeChart,
+.barWrap,
+.chart{
+  gap:2px!important;
+}
+
+.barLabel,
+.weekLabel,
+.chartLabel{
+  font-size:10px!important;
+}
+
+.barValue{
+  font-size:9px!important;
+}
+
 </style>
 <script>
 (function(){
@@ -1320,6 +1478,11 @@ body.dark .inlineSyncStatus{
       <div class="card goalEdit" id="goalEdit">
         <label>Målnamn</label><input id="goalName">
         <label>Måldatum</label><input id="goalDate" type="date">
+        <div class="formGrid">
+          <div><label>Distans km</label><input id="goalKm" type="number" step=".1" inputmode="decimal" placeholder="T.ex. 42.2"></div>
+          <div><label>Tid min</label><input id="goalMins" type="number" inputmode="numeric" placeholder="T.ex. 240"></div>
+        </div>
+        <label>Tempo min/km</label><input id="goalPace" placeholder="T.ex. 5:41" inputmode="text" autocomplete="off">
         <div class="goalActions"><button class="btn" onclick="saveGoal()">Spara mål</button></div>
       </div>
       <div id="stats"></div>
@@ -1649,21 +1812,21 @@ async function loadCloudState(){
           localStorage.setItem(KEY,JSON.stringify(state));
           localStorage.setItem(LOCAL_UPDATED_KEY,cloudUpdated||new Date().toISOString());
           render();
-          toastMsg("Schema laddat från molnet");
+          
         }
       }else{
         state=data.data;
         localStorage.setItem(KEY,JSON.stringify(state));
         localStorage.setItem(LOCAL_UPDATED_KEY,cloudUpdated||new Date().toISOString());
         render();
-        toastMsg("Schema laddat från molnet");
+        
       }
     }else if(hasCloud){
       state=data.data;
       localStorage.setItem(KEY,JSON.stringify(state));
       localStorage.setItem(LOCAL_UPDATED_KEY,data.updated_at||new Date().toISOString());
       render();
-      toastMsg("Schema laddat från molnet");
+      
     }else{
       await saveCloudState(true);
     }
@@ -1826,6 +1989,9 @@ function renderStats(){
        </div>`
     : `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">Inget mål valt</div><div class="nextMeta" style="opacity:.78;margin-top:8px">Lägg till ett lopp eller mål att träna mot.</div><div class="row" style="margin-top:22px"><button class="btn secondary" onclick="toggleGoal()">Lägg till mål</button></div>`;
   goalName.value=state.goal.name||"";goalDate.value=state.goal.date||"";
+  goalKm.value=state.goal.distansKm||"";
+  goalMins.value=state.goal.tidMinuter||"";
+  goalPace.value=state.goal.tempoPerKm||"";
 
   let weekKm={};
   future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
@@ -1842,12 +2008,12 @@ function renderStats(){
   stats.innerHTML=`
     <div class="statsOverview">
       <div class="statMini">
-        <div class="eyebrow">Planerat framåt</div>
+        <div class="eyebrow">Pass</div>
         <div class="statNumber">${future.length} <span class="statUnit">pass</span></div>
         <div class="statText">${next?`nästa ${fmtDate(next.date)}`:"kvar"}</div>
       </div>
       <div class="statMini">
-        <div class="eyebrow">Distans</div>
+        <div class="eyebrow">Km</div>
         <div class="statNumber">${sumKm(future).toFixed(0)} <span class="statUnit">km</span></div>
         <div class="statText">kvar</div>
       </div>
@@ -1956,6 +2122,20 @@ function recalc(source){
 }
 km.addEventListener("input",()=>recalc("km"));mins.addEventListener("input",()=>recalc("mins"));pace.addEventListener("input",()=>recalc("pace"));
 
+let updatingGoal=false;
+function recalcGoal(source){
+  if(updatingGoal)return;
+  updatingGoal=true;
+  const d=Number(goalKm.value||0),t=Number(goalMins.value||0),p=parsePace(goalPace.value);
+  if((source==="km"||source==="mins")&&d&&t) goalPace.value=paceFrom(d,t);
+  if(source==="pace"&&d&&p) goalMins.value=minsFrom(d,goalPace.value);
+  if(source==="km"&&d&&p&&!t) goalMins.value=minsFrom(d,goalPace.value);
+  updatingGoal=false;
+}
+goalKm.addEventListener("input",()=>recalcGoal("km"));
+goalMins.addEventListener("input",()=>recalcGoal("mins"));
+goalPace.addEventListener("input",()=>recalcGoal("pace"));
+
 function scrollToday(){
   let el=document.getElementById("week-"+iso(startOfWeek(new Date())));
   if(el){
@@ -1972,7 +2152,50 @@ function copyCurrentWeek(){
   persist();toastMsg("Vecka kopierad")
 }
 function toggleGoal(){goalEdit.style.display=goalEdit.style.display==="block"?"none":"block"}
-function saveGoal(){state.goal={name:goalName.value.trim(),date:goalDate.value};goalEdit.style.display="none";persist();toastMsg("Mål sparat")}
+function saveGoal(){
+  const name=goalName.value.trim();
+  const goalDs=goalDate.value;
+  const goalDistance=Number(goalKm.value||0);
+  const goalTime=Number(goalMins.value||0);
+  const goalTempo=goalPace.value||paceFrom(goalDistance,goalTime);
+
+  state.goal={
+    name:name,
+    date:goalDs,
+    distansKm:goalDistance,
+    tidMinuter:goalTime,
+    tempoPerKm:goalTempo
+  };
+
+  if(goalDs){
+    const existingRace=state.runs.find(r=>r.isGoalRace===true);
+    const raceObj={
+      date:goalDs,
+      type:"Tävling",
+      distansKm:goalDistance,
+      tidMinuter:goalTime,
+      tempoPerKm:goalTempo,
+      anteckning:name?`Mål: ${name}`:"",
+      genomfort:existingRace?existingRace.genomfort:false,
+      isGoalRace:true
+    };
+
+    if(existingRace){
+      Object.assign(existingRace,raceObj);
+    }else{
+      const sameDayRace=state.runs.find(r=>r.date===goalDs && r.type==="Tävling" && !r.isGoalRace);
+      if(sameDayRace){
+        Object.assign(sameDayRace,{...raceObj,isGoalRace:true});
+      }else{
+        state.runs.push({...raceObj,id:Date.now()+Math.random()});
+      }
+    }
+  }
+
+  goalEdit.style.display="none";
+  persist();
+  toastMsg("Mål sparat som tävling");
+}
 function toggleBackup(){backupBox.style.display=backupBox.style.display==="block"?"none":"block"}
 
 
