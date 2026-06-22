@@ -2427,9 +2427,9 @@ body.dark .run.strengthRun{
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
+const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass","Gång"];
 const STRENGTH_TYPES=["Helkropp","Push","Pull","Ben"];
-const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Helkropp":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0"};
+const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Gång":"#5B8CFF","Helkropp":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0"};
 
 const TYPE_ICONS={
   "Distanspass":"shoe",
@@ -2438,7 +2438,8 @@ const TYPE_ICONS={
   "Tröskelpass":"pulse",
   "Återhämtning":"heart",
   "Tävling":"flag",
-  "Backpass":"mountain"
+  "Backpass":"mountain",
+  "Gång":"shoe"
 };
 const TYPE_DESCRIPTIONS={
   "Distanspass":"Lugn till måttlig fart. Bygger aerob bas.",
@@ -2447,7 +2448,8 @@ const TYPE_DESCRIPTIONS={
   "Tröskelpass":"Pass runt tröskelfart. Kontrollerat hårt.",
   "Återhämtning":"Mycket lugn löpning. Fokus på återhämtning.",
   "Tävling":"Tävlingsdag. Dags att visa vad träningen gett.",
-  "Backpass":"Styrka och löpteknik i backe."
+  "Backpass":"Styrka och löpteknik i backe.",
+  "Gång":"Promenad/gångpass. Räknas in i löpvolymen."
 };
 function typeIconSvg(type){
   const icon=TYPE_ICONS[type]||"shoe";
