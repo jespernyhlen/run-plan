@@ -118,7 +118,7 @@ input[type="date"]{
 }
 input[type="date"]::-webkit-calendar-picker-indicator{
   opacity:0;
-  width:44px;
+  width:40px;
   height:100%;
   position:absolute;
   right:0;
@@ -513,7 +513,7 @@ hr{border:0;border-top:1px solid var(--line);margin:24px 0}
     #FAFAF8;
 }
 .dragHandle{
-  width:44px;
+  width:40px;
   height:5px;
   background:#D7D4CF;
   margin-bottom:22px;
@@ -1458,22 +1458,31 @@ body.dark .strengthBadge{
 .workoutModeToggle{
   display:flex;
   align-items:center;
-  gap:16px;
+  justify-content:flex-start;
+  gap:24px;
   margin:14px 0 8px;
+  padding-left:0;
   font-weight:800;
   color:var(--ink);
 }
 .workoutModeToggle label{
-  display:flex;
+  display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
   margin:0;
+  line-height:1.1;
+}
+.workoutModeToggle label:first-child{
+  margin-left:0;
 }
 .workoutModeToggle input{
   width:18px;
   height:18px;
   min-height:18px;
+  margin:0;
   padding:0;
+  flex:0 0 auto;
+  display:block;
   accent-color:var(--accent);
 }
 .muscleIcon{
@@ -2270,6 +2279,40 @@ body.dark .run.strengthRun{
   overflow:visible!important;
 }
 
+
+/* Header action buttons: equal height and aligned */
+.headerActions{align-items:center;gap:10px;padding-top:0}
+.headerActions .btn,
+.headerActions .menuBtn{
+  height:40px;
+  min-height:40px;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+}
+.headerActions .btn{
+  padding:0 16px;
+  line-height:1;
+}
+.headerActions .menuBtn{
+  width:40px;
+  padding:0;
+  flex:0 0 40px;
+}
+.headerActions .menuWrap{display:flex;align-items:center}
+
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 <script>
 (function(){
@@ -2855,7 +2898,7 @@ function renderSchema(){
     days.forEach(d=>{
       let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
       if(!showEmptyDays && !rs.length) return;
-      html+=`<div class="day"><div class="dayName ${isToday?'today':''}">${weekday(d)}<span class="dayNum ${isToday?'today':''}">${d.getDate()}</span>${isToday?'<span class="todayPill">Idag</span>':''}</div><div class="dayLine"></div><div class="plus" onclick="openRun('${ds}')">+</div>`;
+      html+=`<div class="day"><button type="button" class="dayName dayAddBtn ${isToday?'today':''}" onclick="openRun('${ds}')" aria-label="Lägg till pass ${weekday(d)} ${d.getDate()}">${weekday(d)}<span class="dayNum ${isToday?'today':''}">${d.getDate()}</span>${isToday?'<span class="todayPill">Idag</span>':''}</button>`;
       if(rs.length){rs.forEach(r=>html+=runCard(r));}
       html+=`</div>`;
     });
@@ -3667,6 +3710,514 @@ applyTheme();
 render();
 initSupabase();
 </script>
+
+<style>
+/* v186: weekday/date placed to the left of each workout card, without divider line */
+.day{
+  display:grid !important;
+  grid-template-columns:64px 1fr !important;
+  column-gap:8px !important;
+  row-gap:0 !important;
+  align-items:stretch !important;
+  margin:7px 0 !important;
+}
+
+.dayName{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  gap:2px !important;
+  min-height:44px !important;
+  padding:0 !important;
+  font-size:18px !important;
+  line-height:1 !important;
+  letter-spacing:.2px !important;
+  font-weight:850 !important;
+  color:var(--ink) !important;
+}
+
+.dayName.today{
+  color:var(--accent) !important;
+}
+
+.dayNum{
+  display:block !important;
+  margin-top:3px !important;
+  color:#7f746b !important;
+  font-size:12px !important;
+  line-height:1.05 !important;
+  letter-spacing:.8px !important;
+  font-weight:650 !important;
+  text-transform:uppercase !important;
+}
+
+.dayNum.today{
+  color:var(--accentDark) !important;
+}
+
+.dayLine{
+  display:none !important;
+}
+
+.plus{
+  display:none !important;
+}
+
+.day > .runSwipe{
+  grid-column:2 !important;
+  margin:0 0 8px !important;
+  align-self:center !important;
+}
+
+.day > .runSwipe + .runSwipe{
+  margin-top:5px !important;
+}
+
+.run{
+  min-height:44px !important;
+}
+
+/* Slightly tighter cards when the date is moved to the side */
+.run:not(.strengthRun){
+  padding-top:8px !important;
+  padding-bottom:8px !important;
+}
+
+.run.strengthRun{
+  min-height:44px !important;
+}
+
+/* Dark mode support for the new date column */
+body.dark .dayName{
+  color:#F3FAF6 !important;
+}
+body.dark .dayName.today{
+  color:#75D892 !important;
+}
+body.dark .dayNum{
+  color:#AAB8B0 !important;
+}
+body.dark .dayNum.today{
+  color:#75D892 !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:58px 1fr !important;
+    column-gap:7px !important;
+  }
+  .dayName{
+    font-size:16px !important;
+  }
+  .dayNum{
+    font-size:11px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+
+
+
+<style>
+/* v187: smaller weekday/date text in left column */
+.dayName{
+  font-size:15px !important;
+  line-height:1.05 !important;
+  letter-spacing:.35px !important;
+  font-weight:850 !important;
+  min-height:42px !important;
+}
+
+.dayNum{
+  font-size:10.5px !important;
+  line-height:1.1 !important;
+  letter-spacing:.55px !important;
+  font-weight:650 !important;
+  margin-top:3px !important;
+}
+
+.day{
+  grid-template-columns:56px 1fr !important;
+  column-gap:7px !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:52px 1fr !important;
+    column-gap:6px !important;
+  }
+  .dayName{
+    font-size:14px !important;
+  }
+  .dayNum{
+    font-size:10px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+<style>
+/* v188: weekday/date text slightly smaller again */
+.dayName{
+  font-size:13.5px !important;
+  line-height:1.05 !important;
+  letter-spacing:.35px !important;
+  font-weight:850 !important;
+  min-height:40px !important;
+}
+
+.dayNum{
+  font-size:9.5px !important;
+  line-height:1.08 !important;
+  letter-spacing:.5px !important;
+  font-weight:650 !important;
+  margin-top:2px !important;
+}
+
+.day{
+  grid-template-columns:50px 1fr !important;
+  column-gap:7px !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:47px 1fr !important;
+    column-gap:6px !important;
+  }
+  .dayName{
+    font-size:13px !important;
+  }
+  .dayNum{
+    font-size:9px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+<style>
+/* v189: align weekday/date column to the top of the pass card */
+.day{
+  align-items:start !important;
+}
+
+.dayName{
+  justify-content:flex-start !important;
+  align-self:start !important;
+  padding-top:7px !important;
+  min-height:0 !important;
+}
+
+.day > .runSwipe{
+  align-self:start !important;
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+
+
+
+<script>
+/* v191: dynamic month labels per week section, not from the first week header */
+(function(){
+  var MONTHS = ["januari","februari","mars","april","maj","juni","juli","augusti","september","oktober","november","december"];
+
+  function cleanText(s){
+    return (s || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[–—]/g, "-")
+      .replace(/\./g, "")
+      .trim();
+  }
+
+  function monthIndex(text){
+    text = cleanText(text);
+    for(var i=0;i<MONTHS.length;i++){
+      if(text.indexOf(MONTHS[i]) !== -1) return i;
+      if(text.indexOf(MONTHS[i].slice(0,3)) !== -1) return i;
+    }
+    return -1;
+  }
+
+  function parseWeekRangeFromText(text){
+    text = cleanText(text);
+    var parts = text.split("-").map(function(p){ return p.trim(); });
+    var startText = parts[0] || text;
+    var endText = parts[1] || text;
+
+    var startDayMatch = startText.match(/\d{1,2}/);
+    var endDayMatch = endText.match(/\d{1,2}/);
+
+    var startDay = startDayMatch ? parseInt(startDayMatch[0],10) : null;
+    var endDay = endDayMatch ? parseInt(endDayMatch[0],10) : null;
+
+    var startMonth = monthIndex(startText);
+    var endMonth = monthIndex(endText);
+
+    if(startMonth < 0 && endMonth >= 0) startMonth = endMonth;
+    if(endMonth < 0 && startMonth >= 0) endMonth = startMonth;
+
+    if(startMonth < 0) return null;
+
+    return {
+      startDay:startDay,
+      endDay:endDay,
+      startMonth:startMonth,
+      endMonth:endMonth
+    };
+  }
+
+  function weekInfoForDay(dayEl){
+    var dayRow = dayEl.closest(".day") || dayEl.parentElement;
+    var node = dayRow;
+
+    // Walk backwards among previous siblings until we find this week's header/range.
+    while(node){
+      var prev = node.previousElementSibling;
+      while(prev){
+        var range = prev.querySelector ? prev.querySelector(".weekRange") : null;
+        if(range) return parseWeekRangeFromText(range.textContent || "");
+
+        // Fallback: some week headers may store all text directly in the element.
+        var txt = prev.textContent || "";
+        if(/vecka\s*\d+/i.test(txt) && /\d{1,2}.*[-–—].*\d{1,2}/.test(txt)){
+          var parsed = parseWeekRangeFromText(txt);
+          if(parsed) return parsed;
+        }
+        prev = prev.previousElementSibling;
+      }
+      node = node.parentElement;
+    }
+
+    // Last fallback, but this should rarely be used.
+    var firstRange = document.querySelector(".weekRange");
+    return firstRange ? parseWeekRangeFromText(firstRange.textContent || "") : null;
+  }
+
+  function monthForDay(day, info){
+    if(!info) return "";
+    var m = info.startMonth;
+
+    if(info.startMonth !== info.endMonth){
+      // Normal month rollover: 30 aug - 5 sep.
+      if(info.startDay !== null && info.endDay !== null && info.startDay > info.endDay){
+        m = day >= info.startDay ? info.startMonth : info.endMonth;
+      }else if(info.endDay !== null){
+        m = day <= info.endDay ? info.endMonth : info.startMonth;
+      }
+    }
+
+    
+    var label = MONTHS[m].toUpperCase();
+    return label.length > 4 ? label.slice(0, 3) : label;
+
+  }
+
+  function updateDayDates(){
+    document.querySelectorAll(".dayNum").forEach(function(el){
+      var original = el.getAttribute("data-day-number-original");
+      if(!original){
+        var current = (el.textContent || "").trim();
+        var match = current.match(/\d{1,2}/);
+        if(!match) return;
+        original = match[0];
+        el.setAttribute("data-day-number-original", original);
+      }
+
+      var day = parseInt(original,10);
+      if(!day) return;
+
+      var info = weekInfoForDay(el);
+      var month = monthForDay(day, info);
+      el.textContent = month ? (day + " " + month) : String(day);
+    });
+  }
+
+  updateDayDates();
+
+  var root = document.getElementById("schemaPage") || document.body;
+  if(window.MutationObserver && root){
+    var t;
+    new MutationObserver(function(){
+      clearTimeout(t);
+      t = setTimeout(updateDayDates, 60);
+    }).observe(root, {childList:true, subtree:true, characterData:true});
+  }
+})();
+</script>
+
+
+<style>
+/* v192: shorten long month names in the left date column */
+.dayNum{
+  letter-spacing:.45px !important;
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+
+
+
+<style>
+/* v195: slightly smaller weekday text in clickable date column */
+.dayName{
+  font-size:12px !important;
+  line-height:1.05 !important;
+  letter-spacing:.3px !important;
+}
+
+.dayNum{
+  font-size:9px !important;
+  line-height:1.05 !important;
+}
+
+.day{
+  grid-template-columns:68px 1fr !important;
+  column-gap:9px !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:64px 1fr !important;
+    column-gap:8px !important;
+  }
+  .dayName{
+    font-size:11.5px !important;
+  }
+  .dayNum{
+    font-size:8.8px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+<style>
+/* v196: give workout cards more width by tightening the date column spacing */
+.day{
+  grid-template-columns:56px 1fr !important;
+  column-gap:6px !important;
+}
+
+.dayAddBtn{
+  padding-right:0 !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:52px 1fr !important;
+    column-gap:5px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
+
+<style>
+/* v197: tighten date column a bit more for wider workout cards */
+.day{
+  grid-template-columns:50px 1fr !important;
+  column-gap:4px !important;
+}
+
+.dayName{
+  letter-spacing:.2px !important;
+}
+
+.dayNum{
+  letter-spacing:.25px !important;
+}
+
+@media(max-width:370px){
+  .day{
+    grid-template-columns:48px 1fr !important;
+    column-gap:4px !important;
+  }
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
+</style>
+
 </body>
 </html>
 
@@ -3678,6 +4229,16 @@ initSupabase();
   transform:none !important;
   filter:none !important;
 }
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 
 
@@ -3699,6 +4260,16 @@ initSupabase();
 .runRight .activityIcon.strengthActivity{
   background-size:18px 18px!important;
 }
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 
 
@@ -3715,6 +4286,16 @@ initSupabase();
   min-height:auto !important;
   margin-bottom:2px !important;
 }
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 
 
@@ -3733,6 +4314,16 @@ initSupabase();
 .strengthRun .runText{
   margin-left: 0 !important;
 }
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 
 
@@ -3749,6 +4340,16 @@ initSupabase();
   margin-left:0 !important;
   padding-left:0 !important;
 }
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
 
 <style>
@@ -3758,4 +4359,59 @@ initSupabase();
 .run.checked .activityIcon{
   opacity:0.4 !important;
 }
+
+/* v194: click weekday/date to add workout */
+.day{
+  grid-template-columns:74px 1fr;
+  gap:10px;
+  align-items:start;
+}
+.dayAddBtn{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  background:transparent;
+  padding:1px 0 0;
+  margin:0;
+  width:100%;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:1px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.dayAddBtn:active{
+  background:rgba(63,143,95,.08);
+}
+.dayName{
+  white-space:normal;
+  gap:1px;
+  align-items:flex-start;
+}
+.dayNum{
+  display:block;
+  margin-top:0;
+  line-height:1.05;
+}
+.dayLine,.plus{
+  display:none !important;
+}
+.todayPill{
+  margin-top:3px;
+}
+body.dark .dayAddBtn:active{
+  background:rgba(117,216,146,.12);
+}
+
+
+/* v203: unify rectangular button radius with menu button */
+.btn,
+.actionItem,
+.headerActions .btn,
+.headerActions .menuBtn{
+  border-radius:8px !important;
+}
+
 </style>
