@@ -2872,7 +2872,16 @@ function renderSchema(){
   const today=startOfDay(new Date());
   const next=all.find(r=>!r.genomfort && parse(r.date)>=today) || all.find(r=>!r.genomfort);
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
-  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${isStrengthRun(next)?"Styrka":`${next.distansKm} km`}</div><div class="nextMeta">${isStrengthRun(next)?strengthKind(next.type):`${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km`}</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
+  if(next){
+    const sameDayNext=all.filter(r=>r.date===next.date && !r.genomfort);
+    const extraSameDay=sameDayNext.filter(r=>r.id!==next.id);
+    const extraLabel=extraSameDay.length
+      ? `<div class="nextExtra">Fler pass: ${extraSameDay.slice(0,2).map(r=>esc(isStrengthRun(r)?strengthKind(r.type):r.type)).join(", ")}${extraSameDay.length>2?" …":""}</div>`
+      : "";
+    nextBox.innerHTML=`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}${sameDayNext.length>1?` · ${sameDayNext.length} pass`:""}</div><div class="big">${isStrengthRun(next)?"Styrka":`${next.distansKm} km`}</div><div class="nextMeta">${isStrengthRun(next)?strengthKind(next.type):`${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km`}</div>${extraLabel}${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`;
+  }else{
+    nextBox.innerHTML=`<div class="card empty">Inga kommande pass.</div>`;
+  }
   let currentWeek=startOfWeek(today);
   let minDate=showPastWeeks
     ? (all[0]?startOfWeek(parse(all[0].date)):currentWeek)
@@ -4216,6 +4225,38 @@ body.dark .dayNum.today{
   border-radius:8px !important;
 }
 
+</style>
+
+
+<style>
+/* v204: indicate when next workout day has multiple planned sessions */
+.nextExtra{
+  margin-top:7px;
+  font-size:13px;
+  line-height:1.25;
+  font-weight:650;
+  color:rgba(255,255,255,.86);
+}
+</style>
+
+
+<style>
+/* v206: softer extra-pass text with a bit more spacing */
+.nextExtra{
+  margin-top:10px !important;
+  font-weight:400 !important;
+  opacity:.88 !important;
+}
+</style>
+
+
+<style>
+/* v207: keep extra-pass text normal weight but make it easier to read */
+.nextExtra{
+  color:rgba(255,255,255,.96) !important;
+  opacity:1 !important;
+  font-weight:400 !important;
+}
 </style>
 
 </body>
