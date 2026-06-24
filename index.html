@@ -2354,9 +2354,19 @@ body.dark .run.strengthRun{
               <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
 
               <div class="menuSectionLabel">Inställningar</div>
-              <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
-              <button class="actionItem" onclick="toggleEmptyDays();closeActionMenu()" id="emptyDaysBtn">Dölj dagar utan pass</button>
-              <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
+              <button class="actionItem switchItem" onclick="togglePastWeeks()" id="pastWeeksBtn">
+                <span>Visa tidigare veckor</span>
+                <span class="switch" aria-hidden="true"></span>
+              </button>
+              <button class="actionItem switchItem" onclick="toggleEmptyDays()" id="emptyDaysBtn">
+                <span>Visa dagar utan pass</span>
+                <span class="switch" aria-hidden="true"></span>
+              </button>
+              <button class="actionItem switchItem" onclick="toggleCompactView()" id="compactViewBtn">
+                <span>Minimerad vy</span>
+                <span class="switch" aria-hidden="true"></span>
+              </button>
+              <button class="actionItem themeItem switchItem" onclick="toggleDarkMode(event)" id="darkModeBtn">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
               </button>
@@ -2408,6 +2418,27 @@ body.dark .run.strengthRun{
   </main>
 
   
+
+  <nav class="bottomNav" aria-label="Huvudnavigering">
+    <button id="bottomPlanBtn" class="bottomNavItem active" type="button" onclick="go(0)">
+      <span class="bottomNavIcon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 4.5h10A2.5 2.5 0 0 1 19.5 7v10A2.5 2.5 0 0 1 17 19.5H7A2.5 2.5 0 0 1 4.5 17V7A2.5 2.5 0 0 1 7 4.5Z" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span>Planering</span>
+    </button>
+    <button id="bottomStatsBtn" class="bottomNavItem" type="button" onclick="go(1)">
+      <span class="bottomNavIcon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M5 18.5V11.5M12 18.5V5.5M19 18.5V9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M4 19.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span>Statistik</span>
+    </button>
+  </nav>
 </div>
 
 <div id="modal" class="modal" onclick="if(event.target===modal)closeRun()">
@@ -2514,6 +2545,7 @@ const SHOW_EMPTY_DAYS_KEY="runplanner.showEmptyDays";
 const SUPABASE_URL="https://dxxcxuphjixzjeipaota.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4eGN4dXBoaml4emplaXBhb3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwODgzNDMsImV4cCI6MjA5NjY2NDM0M30.eTxfL4hp5B0JpKco_ZUzgUccI9YJ4z3ltP6LscXE-IE";
 let state=load();
+if(typeof state.compactView!=="boolean") state.compactView=false;
 let showPastWeeks=localStorage.getItem(SHOW_PAST_WEEKS_KEY)==="true";
 let showEmptyDays=localStorage.getItem(SHOW_EMPTY_DAYS_KEY)!=="false";
 let supabaseClient=null;
@@ -2851,6 +2883,10 @@ function toggleEmptyDays(){
   localStorage.setItem(SHOW_EMPTY_DAYS_KEY,showEmptyDays?"true":"false");
   render();
 }
+function toggleCompactView(){
+  state.compactView=!state.compactView;
+  persist();
+}
 function render(){
   type.innerHTML=TYPES.map(t=>`<option>${t}</option>`).join("");
   if(typeof strengthType!=="undefined") strengthType.innerHTML=STRENGTH_TYPES.map(t=>`<option>${t}</option>`).join("");
@@ -2870,13 +2906,19 @@ function relativeDateText(dateString){
 function renderSchema(){
   const all=state.runs;
   const today=startOfDay(new Date());
-  const next=all.find(r=>!r.genomfort && parse(r.date)>=today) || all.find(r=>!r.genomfort);
+  const orderedAll=all.slice().sort((a,b)=>parse(a.date)-parse(b.date) || (a.order??0)-(b.order??0) || a.id-b.id);
+  const next=orderedAll.find(r=>!r.genomfort && parse(r.date)>=today) || orderedAll.find(r=>!r.genomfort);
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
   if(next){
-    const sameDayNext=all.filter(r=>r.date===next.date && !r.genomfort);
+    const sameDayNext=orderedAll.filter(r=>r.date===next.date && !r.genomfort);
     const extraSameDay=sameDayNext.filter(r=>r.id!==next.id);
+    const extraSummary=(r)=>{
+      if(isStrengthRun(r)) return strengthKind(r.type);
+      const km=(r.distansKm!=="" && r.distansKm!=null && !isNaN(Number(r.distansKm))) ? ` ${Number(r.distansKm).toString().replace(".",",")} km` : "";
+      return `${r.type}${km}`;
+    };
     const extraLabel=extraSameDay.length
-      ? `<div class="nextExtra">Fler pass: ${extraSameDay.slice(0,2).map(r=>esc(isStrengthRun(r)?strengthKind(r.type):r.type)).join(", ")}${extraSameDay.length>2?" …":""}</div>`
+      ? `<div class="nextExtra">Fler pass: ${extraSameDay.slice(0,2).map(r=>esc(extraSummary(r))).join(", ")}${extraSameDay.length>2?" …":""}</div>`
       : "";
     nextBox.innerHTML=`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}${sameDayNext.length>1?` · ${sameDayNext.length} pass`:""}</div><div class="big">${isStrengthRun(next)?"Styrka":`${next.distansKm} km`}</div><div class="nextMeta">${isStrengthRun(next)?strengthKind(next.type):`${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km`}</div>${extraLabel}${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`;
   }else{
@@ -2892,11 +2934,19 @@ function renderSchema(){
 
   const btn=document.getElementById('pastWeeksBtn');
   if(btn){
-    btn.textContent=showPastWeeks ? 'Dölj tidigare veckor' : 'Visa tidigare veckor';
+    btn.classList.toggle('active', !!showPastWeeks);
   }
   const emptyBtn=document.getElementById('emptyDaysBtn');
   if(emptyBtn){
-    emptyBtn.textContent=showEmptyDays ? 'Dölj dagar utan pass' : 'Visa dagar utan pass';
+    emptyBtn.classList.toggle('active', !!showEmptyDays);
+  }
+  const compactBtn=document.getElementById('compactViewBtn');
+  if(compactBtn){
+    compactBtn.classList.toggle('active', !!state.compactView);
+  }
+  const darkBtn=document.getElementById('darkModeBtn');
+  if(darkBtn){
+    darkBtn.classList.toggle('active', document.body.classList.contains('dark'));
   }
   let html="";
   for(let w=new Date(minDate);w<=maxDate;w=addDays(w,7)){
@@ -2905,7 +2955,7 @@ function renderSchema(){
     let weekKm=sumKm(weekRuns);
     html+=`<div class="week" id="week-${iso(w)}"><div class="weekHead"><div><div class="weekTitleRow"><div class="weekTitle">Vecka ${weekNo(w)}</div><div class="weekRange">${shortDate(iso(days[0]))}–${shortDate(iso(days[6]))}</div></div></div><div class="weekMeta">${weekRuns.length} pass<br>${weekKm.toFixed(0)} km</div></div>`;
     days.forEach(d=>{
-      let ds=iso(d),rs=all.filter(r=>r.date===ds),isToday=ds===iso(today);
+      let ds=iso(d),rs=all.filter(r=>r.date===ds).sort((a,b)=>(a.order??0)-(b.order??0)||a.id-b.id),isToday=ds===iso(today);
       if(!showEmptyDays && !rs.length) return;
       html+=`<div class="day"><button type="button" class="dayName dayAddBtn ${isToday?'today':''}" onclick="openRun('${ds}')" aria-label="Lägg till pass ${weekday(d)} ${d.getDate()}">${weekday(d)}<span class="dayNum ${isToday?'today':''}">${d.getDate()}</span>${isToday?'<span class="todayPill">Idag</span>':''}</button>`;
       if(rs.length){rs.forEach(r=>html+=runCard(r));}
@@ -2922,13 +2972,13 @@ function runCard(r){
   const activityIcon=activityIconSvg(r);
   return `<div class="runSwipe" data-id="${r.id}">
     <div class="deleteReveal"><button onclick="event.stopPropagation();quickDeleteRun(${r.id})">Ta bort</button></div>
-    <div class="run ${r.genomfort?'done':''} ${isStrengthRun(r)?'strengthRun':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
+    <div class="run ${r.genomfort?'done':''} ${isStrengthRun(r)?'strengthRun':''} ${state.compactView&&!isStrengthRun(r)?'compactRun':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
       <div class="runTop">
         <div><span class="runDist">${runTitle(r)}</span></div>
         <div class="runRight">${activityIcon}${garminIcon}<button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
       </div>
-      <div class="meta">${runMeta(r)}</div>
-      ${r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:""}
+      ${state.compactView&&!isStrengthRun(r)?"":`<div class="meta">${runMeta(r)}</div>`}
+      ${state.compactView&&!isStrengthRun(r)?"":(r.anteckning?`<div class="smallText">${esc(r.anteckning)}</div>`:"")}
     </div>
   </div>`;
 }
@@ -3707,6 +3757,8 @@ function applyTheme(){
   document.body.classList.toggle("dark",dark);
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute("content",dark?"#121110":"#0F766E");
+  const darkBtn=document.getElementById('darkModeBtn');
+  if(darkBtn) darkBtn.classList.toggle('active', dark);
 }
 function toggleDarkMode(event){
   event.stopPropagation();
@@ -4256,6 +4308,476 @@ body.dark .dayNum.today{
   color:rgba(255,255,255,.96) !important;
   opacity:1 !important;
   font-weight:400 !important;
+}
+</style>
+
+
+<style>
+/* v208: long-press drag & drop for mobile workout repositioning */
+.dragModeActive{user-select:none;-webkit-user-select:none}
+.run.draggingRun{opacity:.94;box-shadow:0 16px 36px rgba(20,40,34,.22)!important;transform:scale(1.015);z-index:120}
+.dragGhostRun{position:fixed;left:0;top:0;z-index:300;pointer-events:none;opacity:.96;transform:translate3d(0,0,0) scale(1.015);box-shadow:0 18px 42px rgba(20,40,34,.24)!important;border-radius:14px}
+.dropTargetDay .dayAddBtn{background:rgba(63,143,95,.10)}
+.dropTargetSlot{height:4px;border-radius:999px;background:var(--accent);margin:4px 0 6px;grid-column:2;box-shadow:0 0 0 3px rgba(63,143,95,.12)}
+.dragHint{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:310;background:rgba(29,36,31,.92);color:white;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.25;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+body.dark .dropTargetDay .dayAddBtn{background:rgba(117,216,146,.13)}
+body.dark .dragHint{background:rgba(10,14,12,.94)}
+</style>
+
+
+<script>
+/* v208: mobile long-press drag/drop for moving workouts between days and within same day */
+(function(){
+  var HOLD_MS=750, holdTimer=null, pending=null, drag=null, slotEl=null, hintEl=null;
+
+  function cardFromTarget(target){
+    var run=target&&target.closest?target.closest(".run"):null;
+    if(!run) return null;
+    if(target.closest(".check")) return null;
+    return run;
+  }
+  function point(e){var t=e.touches&&e.touches[0]?e.touches[0]:e;return{x:t.clientX,y:t.clientY};}
+  function runId(el){return Number(el.getAttribute("data-run-id"));}
+  function ensureOrder(){if(!state||!Array.isArray(state.runs))return;state.runs.forEach(function(r,i){if(typeof r.order!=="number")r.order=i;});}
+  function sorted(date){ensureOrder();return state.runs.filter(function(r){return r.date===date;}).slice().sort(function(a,b){return(a.order||0)-(b.order||0)||a.id-b.id;});}
+  function normalize(date){sorted(date).forEach(function(r,i){r.order=i;});}
+  function dateFromDay(day){
+    var btn=day?day.querySelector(".dayAddBtn"):null;
+    if(!btn)return"";
+    var oc=btn.getAttribute("onclick")||"";
+    var m=oc.match(/openRun\('([^']+)'\)/);
+    return m?m[1]:"";
+  }
+  function clearDrop(){
+    document.querySelectorAll(".dropTargetDay").forEach(function(el){el.classList.remove("dropTargetDay");});
+    if(slotEl&&slotEl.parentNode)slotEl.parentNode.removeChild(slotEl);
+    slotEl=null;
+  }
+  function showHint(text){
+    hideHint();
+    hintEl=document.createElement("div");
+    hintEl.className="dragHint";
+    hintEl.textContent=text;
+    document.body.appendChild(hintEl);
+  }
+  function hideHint(){if(hintEl&&hintEl.parentNode)hintEl.parentNode.removeChild(hintEl);hintEl=null;}
+
+  function beginDrag(runEl,p){
+    var sw=runEl.closest(".runSwipe"); if(!sw)return;
+    var rect=runEl.getBoundingClientRect(), id=runId(runEl);
+    var r=state.runs.find(function(x){return x.id===id;}); if(!r)return;
+    ensureOrder();
+    drag={id:id,originalDate:r.date,runEl:runEl,runSwipe:sw,startX:p.x,startY:p.y,offsetX:p.x-rect.left,offsetY:p.y-rect.top,width:rect.width,height:rect.height,currentDate:r.date,insertIndex:sorted(r.date).findIndex(function(x){return x.id===id;})};
+    document.body.classList.add("dragModeActive");
+    runEl.classList.add("draggingRun");
+    var ghost=runEl.cloneNode(true);
+    ghost.classList.add("dragGhostRun");
+    ghost.style.width=rect.width+"px"; ghost.style.height=rect.height+"px";
+    ghost.style.left=rect.left+"px"; ghost.style.top=rect.top+"px";
+    document.body.appendChild(ghost);
+    drag.ghost=ghost;
+    sw.style.opacity=".22"; sw.style.pointerEvents="none";
+    showHint("Flytta passet till en ny plats");
+    updateDrag(p);
+  }
+
+  function findDrop(p){
+    var days=Array.from(document.querySelectorAll(".day")); if(!days.length||!drag)return null;
+    var best=null,bestDist=Infinity;
+    days.forEach(function(day){
+      var r=day.getBoundingClientRect(), dist;
+      if(p.y<r.top)dist=r.top-p.y; else if(p.y>r.bottom)dist=p.y-r.bottom; else dist=0;
+      if(dist<bestDist){bestDist=dist;best=day;}
+    });
+    if(!best)return null;
+    var date=dateFromDay(best); if(!date)return null;
+    var swipes=Array.from(best.querySelectorAll(".runSwipe")).filter(function(sw){return Number(sw.getAttribute("data-id"))!==drag.id;});
+    var index=0;
+    swipes.forEach(function(sw,i){
+      var r=sw.getBoundingClientRect();
+      if(p.y>r.top+r.height/2)index=i+1;
+    });
+    return{day:best,date:date,index:index,swipes:swipes};
+  }
+
+  function showDrop(drop){
+    clearDrop(); if(!drop)return;
+    drop.day.classList.add("dropTargetDay");
+    slotEl=document.createElement("div");
+    slotEl.className="dropTargetSlot";
+    if(drop.swipes.length&&drop.index<drop.swipes.length)drop.day.insertBefore(slotEl,drop.swipes[drop.index]);
+    else drop.day.appendChild(slotEl);
+  }
+
+  function updateDrag(p){
+    if(!drag)return;
+    drag.ghost.style.left=(p.x-drag.offsetX)+"px";
+    drag.ghost.style.top=(p.y-drag.offsetY)+"px";
+    var drop=findDrop(p);
+    if(drop){drag.currentDate=drop.date;drag.insertIndex=drop.index;showDrop(drop);}
+    var page=document.getElementById("schemaPage");
+    if(page){
+      var r=page.getBoundingClientRect();
+      if(p.y<r.top+72)page.scrollTop-=9;
+      if(p.y>r.bottom-88)page.scrollTop+=9;
+    }
+  }
+
+  function commitDrag(){
+    if(!drag)return;
+    var moved=state.runs.find(function(r){return r.id===drag.id;});
+    if(moved){
+      var oldDate=moved.date, newDate=drag.currentDate||oldDate;
+      normalize(oldDate);
+      if(newDate!==oldDate)moved.date=newDate;
+      normalize(newDate);
+      var dayRuns=sorted(newDate).filter(function(r){return r.id!==moved.id;});
+      var idx=Math.max(0,Math.min(drag.insertIndex,dayRuns.length));
+      dayRuns.splice(idx,0,moved);
+      dayRuns.forEach(function(r,i){r.order=i;});
+      if(newDate!==oldDate)normalize(oldDate);
+      persist();
+      toastMsg(newDate!==oldDate?"Pass flyttat till nytt datum":"Ordning uppdaterad");
+    }
+    cleanup(false);
+    render();
+  }
+
+  function cleanup(cancel){
+    clearTimeout(holdTimer); holdTimer=null; pending=null;
+    clearDrop(); hideHint();
+    if(drag){
+      if(drag.ghost&&drag.ghost.parentNode)drag.ghost.parentNode.removeChild(drag.ghost);
+      if(drag.runEl)drag.runEl.classList.remove("draggingRun");
+      if(drag.runSwipe){drag.runSwipe.style.opacity="";drag.runSwipe.style.pointerEvents="";}
+    }
+    document.body.classList.remove("dragModeActive");
+    drag=null;
+  }
+
+  document.addEventListener("touchstart",function(e){
+    if(e.touches.length!==1)return;
+    var runEl=cardFromTarget(e.target); if(!runEl)return;
+    var p=point(e); pending={runEl:runEl,x:p.x,y:p.y};
+    holdTimer=setTimeout(function(){beginDrag(runEl,p); if(navigator.vibrate)navigator.vibrate(18);},HOLD_MS);
+  },{passive:true});
+
+  document.addEventListener("touchmove",function(e){
+    var p=point(e);
+    if(drag){e.preventDefault();updateDrag(p);return;}
+    if(pending&&(Math.abs(p.x-pending.x)>10||Math.abs(p.y-pending.y)>10))cleanup(true);
+  },{passive:false});
+
+  document.addEventListener("touchend",function(){if(drag)commitDrag();else cleanup(true);},{passive:true});
+  document.addEventListener("touchcancel",function(){cleanup(true);},{passive:true});
+
+  document.addEventListener("mousedown",function(e){
+    var runEl=cardFromTarget(e.target); if(!runEl)return;
+    var p=point(e); pending={runEl:runEl,x:p.x,y:p.y};
+    holdTimer=setTimeout(function(){beginDrag(runEl,p);},HOLD_MS);
+  });
+  document.addEventListener("mousemove",function(e){
+    var p=point(e);
+    if(drag){e.preventDefault();updateDrag(p);return;}
+    if(pending&&(Math.abs(p.x-pending.x)>10||Math.abs(p.y-pending.y)>10))cleanup(true);
+  });
+  document.addEventListener("mouseup",function(){if(drag)commitDrag();else cleanup(true);});
+})();
+</script>
+
+
+<style>
+/* v209: respect drag order and use text color instead of date background while dragging */
+.dropTargetDay .dayAddBtn{
+  background:transparent !important;
+}
+
+.dropTargetDay .dayName,
+.dropTargetDay .dayNum{
+  color:var(--accent) !important;
+}
+
+body.dark .dropTargetDay .dayAddBtn{
+  background:transparent !important;
+}
+
+body.dark .dropTargetDay .dayName,
+body.dark .dropTargetDay .dayNum{
+  color:#75D892 !important;
+}
+</style>
+
+
+<style>
+/* v210: allow long-press drag from all workout text/content, only checkbox is excluded */
+.run,
+.run *{
+  user-select:none !important;
+  -webkit-user-select:none !important;
+  -webkit-touch-callout:none !important;
+}
+
+.check,
+.check *{
+  user-select:auto !important;
+  -webkit-user-select:auto !important;
+}
+</style>
+
+
+<style>
+/* v212: faster drag start and tighter spacing between workout cards */
+.day{
+  margin-top:6px !important;
+  margin-bottom:6px !important;
+}
+
+.day > .runSwipe{
+  margin-top:2px !important;
+  margin-bottom:4px !important;
+}
+
+.day > .runSwipe + .runSwipe{
+  margin-top:1px !important;
+}
+
+.dropTargetSlot{
+  margin-top:2px !important;
+  margin-bottom:4px !important;
+}
+</style>
+
+
+<style>
+/* v213: floating bottom navigation between Planning and Statistics */
+.bottomNav{
+  position:fixed;
+  left:50%;
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:45;
+  width:min(330px, calc(100% - 34px));
+  height:56px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  padding:5px;
+  border:1px solid rgba(226,233,225,.9);
+  border-radius:18px;
+  background:rgba(255,255,255,.88);
+  box-shadow:0 12px 34px rgba(28,45,34,.16), 0 1px 2px rgba(28,45,34,.07);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+.bottomNavItem{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 10px;
+  font-size:13px;
+  line-height:1;
+  font-weight:750;
+  letter-spacing:-.05px;
+}
+
+.bottomNavItem.active{
+  background:var(--accent);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(63,143,95,.22);
+}
+
+.bottomNavIcon{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+.bottomNavIcon svg{
+  width:18px;
+  height:18px;
+  display:block;
+}
+
+.page{
+  padding-bottom:calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+.fab{
+  display:none !important;
+}
+
+body.dark .bottomNav{
+  background:rgba(24,32,27,.88);
+  border-color:rgba(72,92,80,.72);
+  box-shadow:0 16px 38px rgba(0,0,0,.28);
+}
+
+body.dark .bottomNavItem{
+  color:#AAB8B0;
+}
+
+body.dark .bottomNavItem.active{
+  background:#3F8F5F;
+  color:#fff;
+}
+</style>
+
+
+<script>
+/* v213: keep floating bottom nav active state in sync with current view */
+(function(){
+  function updateBottomNav(i){
+    var plan=document.getElementById("bottomPlanBtn");
+    var stats=document.getElementById("bottomStatsBtn");
+    if(!plan || !stats) return;
+    plan.classList.toggle("active", i===0);
+    stats.classList.toggle("active", i===1);
+  }
+
+  var oldGo=window.go;
+  window.go=function(i){
+    if(typeof oldGo==="function") oldGo(i);
+    updateBottomNav(i);
+  };
+
+  updateBottomNav(0);
+})();
+</script>
+
+
+<style>
+/* v214: tighter floating bottom navigation spacing */
+.bottomNav{
+  bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  width:calc(100% - 22px) !important;
+  max-width:338px !important;
+  height:52px !important;
+  padding:4px !important;
+  border-radius:16px !important;
+}
+
+.bottomNavItem{
+  border-radius:12px !important;
+  padding:0 8px !important;
+}
+
+.page{
+  padding-bottom:calc(82px + env(safe-area-inset-bottom)) !important;
+}
+</style>
+
+
+<style>
+/* v215: vertically align bottom nav icons with text */
+.bottomNavItem{
+  align-items:center !important;
+  line-height:1 !important;
+}
+
+.bottomNavIcon{
+  position:relative !important;
+  top:0 !important;
+  transform:translateY(0.5px) !important;
+  align-self:center !important;
+}
+
+.bottomNavIcon svg{
+  display:block !important;
+  vertical-align:middle !important;
+}
+
+.bottomNavItem span:not(.bottomNavIcon){
+  display:inline-flex !important;
+  align-items:center !important;
+  line-height:1 !important;
+}
+</style>
+
+
+<style>
+/* v216: nudge bottom nav icons upward to align optically with text */
+.bottomNavIcon{
+  transform:translateY(-1.5px) !important;
+}
+
+.bottomNavItem span:not(.bottomNavIcon){
+  transform:translateY(0) !important;
+}
+</style>
+
+
+<style>
+/* v217: lower only the Planering icon slightly for better optical alignment */
+#bottomPlanBtn .bottomNavIcon{
+  transform:translateY(-0.5px) !important;
+}
+
+#bottomStatsBtn .bottomNavIcon{
+  transform:translateY(-1.5px) !important;
+}
+</style>
+
+
+<style>
+/* v218: minimized view and switch-style menu settings */
+.switchItem{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+}
+
+.switchItem .switch{
+  margin-left:auto;
+}
+
+.switchItem.active .switch{
+  background:var(--accent) !important;
+}
+
+.switchItem.active .switch:after{
+  transform:translateX(17px) !important;
+}
+
+body.dark .switchItem:not(.active) .switch{
+  background:#34423B !important;
+}
+
+body.dark .switchItem:not(.active) .switch:after{
+  transform:translateX(0) !important;
+}
+
+.run.compactRun{
+  min-height:48px !important;
+  padding-top:10px !important;
+  padding-bottom:10px !important;
+}
+
+.run.compactRun .runTop{
+  min-height:28px !important;
+}
+
+.run.compactRun .runDist{
+  font-size:22px !important;
+}
+
+.run.compactRun .meta,
+.run.compactRun .smallText{
+  display:none !important;
+}
+
+.day > .runSwipe:has(.compactRun){
+  margin-top:1px !important;
+  margin-bottom:3px !important;
 }
 </style>
 
