@@ -4781,6 +4781,48 @@ body.dark .switchItem:not(.active) .switch:after{
 }
 </style>
 
+
+
+
+
+
+<style>
+/* v223: make running km titles as small as strength headings */
+.run:not(.strengthRun) .runDist{
+  font-size:17px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.15px !important;
+}
+
+.run.compactRun:not(.strengthRun) .runDist{
+  font-size:17px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.15px !important;
+}
+</style>
+
+
+<style>
+/* v224: center strength workout content with equal top/bottom padding */
+.run.strengthRun{
+  min-height:48px !important;
+  padding-top:9px !important;
+  padding-bottom:9px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+}
+
+.run.strengthRun .runTop{
+  align-items:center !important;
+  min-height:28px !important;
+}
+
+.run.strengthRun .runRight{
+  align-items:center !important;
+}
+</style>
+
 </body>
 </html>
 
