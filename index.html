@@ -4823,6 +4823,74 @@ body.dark .switchItem:not(.active) .switch:after{
 }
 </style>
 
+
+<style>
+/* v225: edge-to-edge smaller bottom navigation */
+.bottomNav{
+  left:0 !important;
+  right:0 !important;
+  bottom:calc(0px + env(safe-area-inset-bottom)) !important;
+  transform:none !important;
+  width:100% !important;
+  max-width:none !important;
+  height:46px !important;
+  padding:3px 8px !important;
+  border-left:0 !important;
+  border-right:0 !important;
+  border-bottom:0 !important;
+  border-radius:14px 14px 0 0 !important;
+}
+
+.bottomNavItem{
+  border-radius:10px !important;
+  font-size:12.5px !important;
+  gap:6px !important;
+  padding:0 7px !important;
+}
+
+.bottomNavIcon,
+.bottomNavIcon svg{
+  width:16px !important;
+  height:16px !important;
+}
+
+.page{
+  padding-bottom:calc(66px + env(safe-area-inset-bottom)) !important;
+}
+</style>
+
+
+<style>
+/* v226: square edge-to-edge bottom nav, selected item uses text color instead of filled background */
+.bottomNav{
+  border-radius:0 !important;
+  padding:3px 8px !important;
+}
+
+.bottomNavItem{
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:var(--muted) !important;
+}
+
+.bottomNavItem.active{
+  background:transparent !important;
+  box-shadow:none !important;
+  color:var(--accent) !important;
+}
+
+body.dark .bottomNavItem{
+  color:#AAB8B0 !important;
+}
+
+body.dark .bottomNavItem.active{
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#75D892 !important;
+}
+</style>
+
 </body>
 </html>
 
