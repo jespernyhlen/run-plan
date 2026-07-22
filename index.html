@@ -2457,10 +2457,32 @@ body.dark .run.strengthRun{
       <select id="strengthType"></select>
     </div>
     <div class="formGrid" id="runMetricsGrid">
-      <div><label>Distans km</label><input id="km" type="number" step=".1" inputmode="decimal"></div>
-      <div><label>Tid min</label><input id="mins" type="number" inputmode="numeric"></div>
+      <div class="clearField">
+        <label>Distans km</label>
+        <div class="inputClearWrap">
+          <input id="km" type="number" step=".1" inputmode="decimal">
+          <button type="button" class="inputClearBtn" onclick="clearRunField('km')" aria-label="Rensa distans">×</button>
+        </div>
+      </div>
+      <div class="clearField" id="timeField">
+        <label>Tid</label>
+        <input id="mins" type="hidden">
+        <div class="timeInputWrap">
+          <input id="timeHours" type="number" inputmode="numeric" min="0" placeholder="0">
+          <span class="timeUnit">h</span>
+          <input id="timeMinutes" type="number" inputmode="numeric" min="0" max="59" placeholder="00">
+          <span class="timeUnit">min</span>
+          <button type="button" class="inputClearBtn timeClearBtn" onclick="clearRunField('time')" aria-label="Rensa tid">×</button>
+        </div>
+      </div>
     </div>
-    <div id="paceField"><label>Tempo min/km</label><input id="pace" placeholder="T.ex. 7:30" inputmode="text" autocomplete="off"></div>
+    <div id="paceField" class="clearField">
+      <label>Tempo min/km</label>
+      <div class="inputClearWrap">
+        <input id="pace" placeholder="T.ex. 7:30" inputmode="text" autocomplete="off">
+        <button type="button" class="inputClearBtn" onclick="clearRunField('pace')" aria-label="Rensa tempo">×</button>
+      </div>
+    </div>
     <label>Anteckningar</label><textarea id="note" placeholder="Ex. 6 × 1000 m, lugn jogg, känsla..."></textarea>
     <div class="actions"><button class="btn" onclick="saveRun()">Spara</button></div>
     <div style="display:flex;justify-content:center;margin-top:8px"><button id="deleteBtn" class="btn danger" style="flex:none" onclick="deleteRun()">Ta bort pass</button></div>
@@ -2611,6 +2633,37 @@ function formatDuration(mins){
   return `${h} h ${String(m).padStart(2,"0")} min`;
 }
 
+function setRunTimeInputs(total){
+  const t=Number(total||0);
+  const h=t?Math.floor(t/60):0;
+  const m=t?Math.round(t%60):0;
+  if(typeof timeHours!=="undefined") timeHours.value=h?String(h):"";
+  if(typeof timeMinutes!=="undefined") timeMinutes.value=m?String(m):"";
+  if(typeof mins!=="undefined") mins.value=t?String(t):"";
+}
+function getRunTimeMinutes(){
+  const h=Number((typeof timeHours!=="undefined"&&timeHours.value)||0);
+  const m=Number((typeof timeMinutes!=="undefined"&&timeMinutes.value)||0);
+  const total=Math.max(0,Math.round(h*60+m));
+  if(typeof mins!=="undefined") mins.value=total?String(total):"";
+  return total;
+}
+function clearRunField(field){
+  if(field==="km" && typeof km!=="undefined") km.value="";
+  if(field==="time"){
+    if(typeof timeHours!=="undefined") timeHours.value="";
+    if(typeof timeMinutes!=="undefined") timeMinutes.value="";
+    if(typeof mins!=="undefined") mins.value="";
+  }
+  if(field==="pace" && typeof pace!=="undefined") pace.value="";
+  updateClearButtons();
+}
+function updateClearButtons(){
+  document.querySelectorAll(".inputClearWrap,.timeInputWrap").forEach(w=>{
+    const hasValue=Array.from(w.querySelectorAll("input")).some(i=>String(i.value||"").length>0);
+    w.classList.toggle("hasValue",hasValue);
+  });
+}
 function minsFrom(km,pace){let p=parsePace(pace);return km&&p?Math.round(km*p):0}
 function parsePace(p){if(!p)return 0;let [m,s="0"]=String(p).trim().replace(",",":").replace(".",":").replace(";",":").split(":");return Number(m)+Number(s)/60}
 function sum(a,k){return a.reduce((s,r)=>s+Number(r[k]||0),0)}
@@ -2633,8 +2686,9 @@ function updateRunFormFields(){
   if(typeof paceField!=="undefined") paceField.classList.toggle("formFieldHidden",strength);
   if(strength){
     km.value="";
-    mins.value="";
+    setRunTimeInputs("");
     pace.value="";
+    updateClearButtons();
   }
 }
 function runTitle(r){
@@ -3058,8 +3112,8 @@ function showModal(){
     sheet.style.transform="translateY(0)";
   });
 }
-function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());runMode.checked=true;strengthMode.checked=false;type.value=TYPES[0];strengthType.value=STRENGTH_TYPES[0];km.value="";mins.value="";pace.value="";note.value="";updateRunFormFields();hideGarminEditInfo();moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
-function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Redigera pass";runId.value=r.id;date.value=r.date;runMode.checked=!isStrengthRun(r);strengthMode.checked=isStrengthRun(r);if(isStrengthRun(r)){strengthType.value=r.type}else{type.value=r.type}km.value=isStrengthRun(r)?"":r.distansKm;mins.value=isStrengthRun(r)?"":r.tidMinuter;pace.value=isStrengthRun(r)?"":r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;updateRunFormFields();showGarminEditInfo(r);moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
+function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());runMode.checked=true;strengthMode.checked=false;type.value=TYPES[0];strengthType.value=STRENGTH_TYPES[0];km.value="";setRunTimeInputs("");pace.value="";note.value="";updateRunFormFields();updateClearButtons();hideGarminEditInfo();moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
+function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Redigera pass";runId.value=r.id;date.value=r.date;runMode.checked=!isStrengthRun(r);strengthMode.checked=isStrengthRun(r);if(isStrengthRun(r)){strengthType.value=r.type}else{type.value=r.type}km.value=isStrengthRun(r)?"":r.distansKm;setRunTimeInputs(isStrengthRun(r)?"":r.tidMinuter);pace.value=isStrengthRun(r)?"":r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;updateRunFormFields();updateClearButtons();showGarminEditInfo(r);moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
 
 function hideGarminEditInfo(){
   if(typeof garminInfoBox!=="undefined"){
@@ -3101,7 +3155,8 @@ function saveRun(){
   if(!date.value){toastMsg("Välj datum");return}
   const selectedType=currentSelectedType();
   const isStrength=isStrengthType(selectedType);
-  const obj={date:date.value,type:selectedType,distansKm:isStrength?0:Number(km.value||0),tidMinuter:isStrength?0:Number(mins.value||0),tempoPerKm:isStrength?"":(pace.value||paceFrom(Number(km.value),Number(mins.value))),anteckning:note.value,genomfort:lastEdited?lastEdited.genomfort:false};
+  const totalMinutes=getRunTimeMinutes();
+  const obj={date:date.value,type:selectedType,distansKm:isStrength?0:Number(km.value||0),tidMinuter:isStrength?0:totalMinutes,tempoPerKm:isStrength?"":(pace.value||paceFrom(Number(km.value),totalMinutes)),anteckning:note.value,genomfort:lastEdited?lastEdited.genomfort:false};
   if(runId.value){Object.assign(state.runs.find(r=>r.id==runId.value),obj)}else{state.runs.push({...obj,id:Date.now()+Math.random()})}
   closeRun();persist();toastMsg("Sparat")
 }
@@ -3126,13 +3181,17 @@ function moveFuture(){
 let updating=false;
 function recalc(source){
   if(updating)return;updating=true;
-  const d=Number(km.value||0),t=Number(mins.value||0),p=parsePace(pace.value);
+  const d=Number(km.value||0),t=getRunTimeMinutes(),p=parsePace(pace.value);
   if((source==="km"||source==="mins")&&d&&t) pace.value=paceFrom(d,t);
-  if(source==="pace"&&d&&p) mins.value=minsFrom(d,pace.value);
-  if(source==="km"&&d&&p&&!t) mins.value=minsFrom(d,pace.value);
+  if(source==="pace"&&d&&p) setRunTimeInputs(minsFrom(d,pace.value));
+  if(source==="km"&&d&&p&&!t) setRunTimeInputs(minsFrom(d,pace.value));
+  updateClearButtons();
   updating=false;
 }
-km.addEventListener("input",()=>recalc("km"));mins.addEventListener("input",()=>recalc("mins"));pace.addEventListener("input",()=>recalc("pace"));
+km.addEventListener("input",()=>recalc("km"));
+timeHours.addEventListener("input",()=>recalc("mins"));
+timeMinutes.addEventListener("input",()=>recalc("mins"));
+pace.addEventListener("input",()=>recalc("pace"));
 
 let updatingGoal=false;
 function recalcGoal(source){
@@ -4902,6 +4961,96 @@ body.dark .bottomNavItem.active{
 .headerActions .btn,
 .headerActions .menuBtn{
   margin-top:2px !important;
+}
+</style>
+
+
+<style>
+/* v228: time input as hours/minutes + clear buttons for distance/time/pace */
+.inputClearWrap,
+.timeInputWrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  width:100%;
+}
+
+.inputClearWrap input{
+  padding-right:42px !important;
+}
+
+.timeInputWrap{
+  min-height:46px;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:12px;
+  padding:0 38px 0 12px;
+  gap:6px;
+}
+
+.timeInputWrap input{
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  min-height:44px !important;
+  padding:0 !important;
+  text-align:center;
+}
+
+#timeHours{
+  width:34px !important;
+  flex:0 0 34px;
+}
+
+#timeMinutes{
+  width:42px !important;
+  flex:0 0 42px;
+}
+
+.timeUnit{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:750;
+  flex:0 0 auto;
+}
+
+.inputClearBtn{
+  position:absolute;
+  right:9px;
+  top:50%;
+  transform:translateY(-50%);
+  width:24px;
+  height:24px;
+  border:0;
+  border-radius:8px;
+  background:rgba(111,122,114,.10);
+  color:var(--muted);
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  line-height:1;
+  padding:0;
+  opacity:.45;
+}
+
+.inputClearWrap.hasValue .inputClearBtn,
+.timeInputWrap.hasValue .inputClearBtn{
+  opacity:1;
+}
+
+.inputClearBtn:active{
+  background:rgba(180,74,74,.12);
+  color:var(--danger);
+}
+
+body.dark .timeInputWrap{
+  background:rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.10);
+}
+
+body.dark .inputClearBtn{
+  background:rgba(255,255,255,.08);
+  color:#AAB8B0;
 }
 </style>
 
