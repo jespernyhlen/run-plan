@@ -2945,8 +2945,13 @@ function renderStats(){
       <div class="eyebrow">Tid per sko</div>
       <div class="shoeStatsList">
         ${SHOE_OPTIONS.map(s=>{
-          const total=state.runs.filter(r=>r.genomfort&&r.shoe===s).reduce((sum,r)=>sum+Number(r.tidMinuter||0),0);
-          return `<div class="shoeStatRow"><span>${esc(s)}</span><strong>${formatDuration(total)}</strong></div>`;
+          const shoeRuns=state.runs.filter(r=>r.genomfort&&r.shoe===s);
+          const total=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter||0),0);
+          const km=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0),0);
+          return `<div class="shoeStatRow">
+            <span>${esc(s)}</span>
+            <div class="shoeStatValues"><strong>${km.toFixed(1).replace(".",",")} km</strong><strong>${formatDuration(total)}</strong></div>
+          </div>`;
         }).join("")}
       </div>
     </div>
@@ -3712,6 +3717,23 @@ initSupabase();
 .shoeStatRow span{font-weight:650}
 .shoeStatRow strong{font-weight:800;white-space:nowrap;color:var(--muted)}
 body.dark .shoeStatRow{border-top-color:rgba(255,255,255,.10)}
+</style>
+
+
+<style>
+/* v230: show distance and time per shoe */
+.shoeStatRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.shoeStatValues{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  white-space:nowrap;
+}
 </style>
 
 </body>
