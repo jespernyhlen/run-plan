@@ -2311,6 +2311,7 @@ body.dark .run.strengthRun{
               <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
 
               <div class="menuSectionLabel">Inställningar</div>
+              <button class="actionItem" onclick="toggleBackup();closeActionMenu()">Backup & återställning</button>
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
               <button class="actionItem" onclick="toggleEmptyDays();closeActionMenu()" id="emptyDaysBtn">Dölj dagar utan pass</button>
               <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
@@ -2331,40 +2332,60 @@ body.dark .run.strengthRun{
         </div>
       </div>
       <div id="nextBox"></div>
+      <div id="previousWeekControl"></div>
       <div id="weeks"></div>
     </section>
 
     <section class="page">
-      <h1>Översikt</h1><p class="sub">Planering och statistik</p>
-      <div class="card hero" id="goalCard"></div>
-      <div class="card goalEdit" id="goalEdit">
-        <label>Målnamn</label><input id="goalName">
-        <label>Måldatum</label><input id="goalDate" type="date">
-        <div class="formGrid">
-          <div><label>Distans km</label><input id="goalKm" type="number" step=".1" inputmode="decimal" placeholder="T.ex. 42.2"></div>
-          <div><label>Tid min</label><input id="goalMins" type="number" inputmode="numeric" placeholder="T.ex. 240"></div>
-        </div>
-        <label>Tempo min/km</label><input id="goalPace" placeholder="T.ex. 5:41" inputmode="text" autocomplete="off">
-        <div class="goalActions"><button class="btn" onclick="saveGoal()">Spara mål</button></div>
-      </div>
-      <div id="stats"></div>
-      <div class="card">
-        <div class="row"><div><div class="eyebrow">Data</div><h3>Backup & återställning</h3></div><button class="btn secondary" onclick="toggleBackup()">Visa</button></div>
-        <div class="backupBox" id="backupBox">
-          <p class="backupHint">Exportera innan större ändringar. Import ersätter nuvarande data.</p>
-          <div class="backupActions">
-            <button class="btn secondary" onclick="exportData()">Exportera</button>
-            <button class="btn secondary" onclick="document.getElementById('importFile').click()">Importera</button>
-          </div>
-          <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
-          <button class="textAction danger" onclick="clearAllData()">Rensa all data</button>
+      <h1>Översikt</h1>
 
-        </div>
+      <div class="overviewTabs" role="tablist">
+        <button id="overviewPlanningTab" class="overviewTab active" onclick="setOverviewView('planning')">Planering</button>
+        <button id="overviewStatsTab" class="overviewTab" onclick="setOverviewView('stats')">Statistik</button>
       </div>
+
+      <div id="overviewPlanningView">
+        <div class="card hero" id="goalCard"></div>
+        <div class="card goalEdit" id="goalEdit">
+          <label>Målnamn</label><input id="goalName">
+          <label>Måldatum</label><input id="goalDate" type="date">
+          <div class="formGrid">
+            <div><label>Distans km</label><input id="goalKm" type="number" step=".1" inputmode="decimal" placeholder="T.ex. 42.2"></div>
+            <div><label>Tid min</label><input id="goalMins" type="number" inputmode="numeric" placeholder="T.ex. 240"></div>
+          </div>
+          <label>Tempo min/km</label><input id="goalPace" placeholder="T.ex. 5:41" inputmode="text" autocomplete="off">
+          <div class="goalActions"><button class="btn" onclick="saveGoal()">Spara mål</button></div>
+        </div>
+        <div id="planningStats"></div>
+      </div>
+
+      <div id="overviewStatsView" style="display:none">
+        <div id="historicalStats"></div>
+      </div>
+
+      <div id="stats" style="display:none"></div>
     </section>
+  
   </main>
 
   
+</div>
+
+<div id="backupModal" class="modal" onclick="if(event.target===backupModal)closeBackup()">
+  <div class="sheet backupSheet">
+    <div class="dragHandle"></div>
+    <div class="row"><h2>Backup & återställning</h2></div>
+    <div class="backupBox" id="backupBox">
+      <p class="backupHint">Exportera innan större ändringar. Import ersätter nuvarande data.</p>
+      <div class="backupActions">
+        <button class="btn secondary" onclick="exportData()">Exportera</button>
+        <button class="btn secondary" onclick="document.getElementById('importFile').click()">Importera</button>
+      </div>
+      <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
+      <button class="textAction danger" onclick="clearAllData()">Rensa all data</button>
+    </div>
+    <button class="textAction" style="text-align:center" onclick="closeBackup()">Stäng</button>
+  </div>
 </div>
 
 <div id="modal" class="modal" onclick="if(event.target===modal)closeRun()">
@@ -2476,6 +2497,7 @@ const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 let state=load();
 let showPastWeeks=localStorage.getItem(SHOW_PAST_WEEKS_KEY)==="true";
 let showEmptyDays=localStorage.getItem(SHOW_EMPTY_DAYS_KEY)!=="false";
+let previousWeeksShown=Number(localStorage.getItem("runplanner.previousWeeksShown")||0);
 let supabaseClient=null;
 let cloudUser=null;
 let cloudLoading=false;
@@ -2710,22 +2732,10 @@ async function loadCloudState(){
       const localIsDifferent=JSON.stringify(JSON.parse(localRaw))!==JSON.stringify(data.data);
 
       if(localIsDifferent&&localUpdated&&cloudUpdated){
-        const cloudDate=new Date(cloudUpdated);
-        const localDate=new Date(localUpdated);
-        const useLocal=localDate>cloudDate
-          ? confirm("Du har nyare data lokalt än i molnet. Vill du ladda upp den lokala versionen till molnet?")
-          : !confirm("Det finns molndata som skiljer sig från denna enhet. Vill du behålla lokal data? Tryck Avbryt för att hämta molndata.");
-
-        if(useLocal){
-          state=JSON.parse(localRaw);
-          await saveCloudState(true);
-        }else{
-          state=data.data;
-          localStorage.setItem(KEY,JSON.stringify(state));
-          localStorage.setItem(LOCAL_UPDATED_KEY,cloudUpdated||new Date().toISOString());
-          render();
-          
-        }
+        // Lokal data är den primära versionen. Ingen bekräftelseruta visas
+        // vid uppstart; den lokala versionen behålls och synkas till molnet.
+        state=JSON.parse(localRaw);
+        await saveCloudState(false);
       }else{
         state=data.data;
         localStorage.setItem(KEY,JSON.stringify(state));
@@ -2803,12 +2813,19 @@ document.addEventListener("click",e=>{
 });
 function togglePastWeeks(){
   showPastWeeks=!showPastWeeks;
+  previousWeeksShown=0;
   localStorage.setItem(SHOW_PAST_WEEKS_KEY,showPastWeeks?"true":"false");
+  localStorage.setItem("runplanner.previousWeeksShown","0");
   render();
 }
 function toggleEmptyDays(){
   showEmptyDays=!showEmptyDays;
   localStorage.setItem(SHOW_EMPTY_DAYS_KEY,showEmptyDays?"true":"false");
+  render();
+}
+function showPreviousWeek(){
+  previousWeeksShown++;
+  localStorage.setItem("runplanner.previousWeeksShown",String(previousWeeksShown));
   render();
 }
 function render(){
@@ -2835,9 +2852,16 @@ function renderSchema(){
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
   nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${isStrengthRun(next)?"Styrka":`${next.distansKm} km`}</div><div class="nextMeta">${isStrengthRun(next)?strengthKind(next.type):`${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km`}</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
   let currentWeek=startOfWeek(today);
-  let minDate=showPastWeeks
-    ? (all[0]?startOfWeek(parse(all[0].date)):currentWeek)
-    : currentWeek;
+  const earliestDataWeek=all[0]?startOfWeek(parse(all[0].date)):currentWeek;
+  const minDate=showPastWeeks
+    ? earliestDataWeek
+    : addDays(currentWeek,-7*previousWeeksShown);
+
+  const previousWeekControl=document.getElementById("previousWeekControl");
+  const canShowPreviousWeek=!showPastWeeks && minDate>earliestDataWeek;
+  previousWeekControl.innerHTML=canShowPreviousWeek
+    ? `<button class="previousWeekButton" onclick="showPreviousWeek()">Visa föregående vecka</button>`
+    : "";
 
   let endOfYear=new Date(today.getFullYear(),11,31);
   let maxDate=startOfWeek(endOfYear);
@@ -2884,11 +2908,21 @@ function runCard(r){
     </div>
   </div>`;
 }
-function renderStats(){
+function getOverviewView(){
+  return localStorage.getItem("runplanner.overviewView")||"planning";
+}
+function setOverviewView(view){
+  localStorage.setItem("runplanner.overviewView",view);
+  renderStats();
+}
+function renderOverviewTabs(view){
+  overviewPlanningView.style.display=view==="planning"?"block":"none";
+  overviewStatsView.style.display=view==="stats"?"block":"none";
+  overviewPlanningTab.classList.toggle("active",view==="planning");
+  overviewStatsTab.classList.toggle("active",view==="stats");
+}
+function renderGoal(){
   const today=startOfDay(new Date());
-  const runs=state.runs.filter(r=>!isStrengthRun(r));
-  const upcoming=runs.filter(r=>!r.genomfort && parse(r.date)>=today);
-  const future=upcoming.length ? upcoming : runs.filter(r=>!r.genomfort);
   const hasGoal=state.goal&&state.goal.name&&state.goal.date;
   const days=hasGoal?Math.max(0,Math.ceil((parse(state.goal.date)-today)/86400000)):null;
   goalCard.innerHTML=hasGoal
@@ -2900,68 +2934,59 @@ function renderStats(){
          <button class="btn secondary" onclick="toggleGoal()">Ändra</button>
        </div>`
     : `<div class="eyebrow">◎ Mål</div><div class="big" style="font-size:35px">Inget mål valt</div><div class="nextMeta" style="opacity:.78;margin-top:8px">Lägg till ett lopp eller mål att träna mot.</div><div class="row" style="margin-top:22px"><button class="btn secondary" onclick="toggleGoal()">Lägg till mål</button></div>`;
-  goalName.value=state.goal.name||"";goalDate.value=state.goal.date||"";
-  goalKm.value=state.goal.distansKm||"";
-  goalMins.value=state.goal.tidMinuter||"";
-  goalPace.value=state.goal.tempoPerKm||"";
-
+  goalName.value=state.goal.name||""; goalDate.value=state.goal.date||"";
+  goalKm.value=state.goal.distansKm||""; goalMins.value=state.goal.tidMinuter||""; goalPace.value=state.goal.tempoPerKm||"";
+}
+function renderPlanningStats(){
+  const today=startOfDay(new Date());
+  const runs=state.runs.filter(r=>!isStrengthRun(r));
+  const future=runs.filter(r=>!r.genomfort&&parse(r.date)>=today);
   let weekKm={};
   future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
   let entries=Object.entries(weekKm).sort();
   let max=Math.max(20,...entries.map(e=>e[1]));
-  let bars=entries.map(([k,v],i)=>{
-    return `<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===0?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${i===0?'Nästa':shortDate(k)}</div></div>`
-  }).join("");
-
-  let types={};
-  future.forEach(r=>types[r.type]=(types[r.type]||0)+1);
-
+  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===0?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${i===0?'Nästa':shortDate(k)}</div></div>`).join("");
+  let types={}; future.forEach(r=>types[r.type]=(types[r.type]||0)+1);
   const next=future[0];
-  stats.innerHTML=`
+  planningStats.innerHTML=`
     <div class="statsOverview">
-      <div class="statMini">
-        <div class="eyebrow">Pass</div>
-        <div class="statNumber">${future.length} <span class="statUnit">pass</span></div>
-        <div class="statText">${next?`nästa ${fmtDate(next.date)}`:"kvar"}</div>
-      </div>
-      <div class="statMini">
-        <div class="eyebrow">Km</div>
-        <div class="statNumber">${sumKm(future).toFixed(0)} <span class="statUnit">km</span></div>
-        <div class="statText">kvar</div>
-      </div>
-      <div class="statMini">
-        <div class="eyebrow">Tid</div>
-        <div class="statNumber">${(sum(future,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div>
-        <div class="statText">kvar</div>
-      </div>
+      <div class="statMini"><div class="eyebrow">Pass</div><div class="statNumber">${future.length} <span class="statUnit">pass</span></div><div class="statText">${next?`nästa ${fmtDate(next.date)}`:"kvar"}</div></div>
+      <div class="statMini"><div class="eyebrow">Km</div><div class="statNumber">${sumKm(future).toFixed(0)} <span class="statUnit">km</span></div><div class="statText">kvar</div></div>
+      <div class="statMini"><div class="eyebrow">Tid</div><div class="statNumber">${(sum(future,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div><div class="statText">kvar</div></div>
     </div>
-
-    <div class="card statChart">
-      <div class="eyebrow">Planerad volym per vecka</div>
-      <div class="statBars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div>
+    <div class="card statChart"><div class="eyebrow">Planerad volym per vecka</div><div class="statBars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div></div>
+    <div class="card"><div class="eyebrow">Kommande passtyper</div><div class="typeCards">
+      ${Object.entries(types).map(([k,v])=>`<div class="typeCard"><div class="typeInfo"><span class="typeIcon" style="--type:${TYPE_COLORS[k]||'#bbb'}">${typeIconSvg(k)}</span><div><div class="typeTitle">${k}</div><div class="typeDesc">${TYPE_DESCRIPTIONS[k]||""}</div></div></div><span class="typeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
+    </div></div>`;
+}
+function renderHistoricalStats(){
+  const completed=state.runs.filter(r=>r.genomfort&&!isStrengthRun(r)).sort((a,b)=>a.date.localeCompare(b.date));
+  let weekKm={};
+  completed.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
+  let entries=Object.entries(weekKm).sort();
+  let max=Math.max(20,...entries.map(e=>e[1]));
+  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===entries.length-1?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${shortDate(k)}</div></div>`).join("");
+  let types={}; completed.forEach(r=>types[r.type]=(types[r.type]||0)+1);
+  historicalStats.innerHTML=`
+    <div class="statsOverview">
+      <div class="statMini"><div class="eyebrow">Pass</div><div class="statNumber">${completed.length} <span class="statUnit">pass</span></div><div class="statText">genomförda</div></div>
+      <div class="statMini"><div class="eyebrow">Km</div><div class="statNumber">${sumKm(completed).toFixed(0)} <span class="statUnit">km</span></div><div class="statText">genomförda</div></div>
+      <div class="statMini"><div class="eyebrow">Tid</div><div class="statNumber">${(sum(completed,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div><div class="statText">träning</div></div>
     </div>
-
-    <div class="card shoeStatsCard">
-      <div class="eyebrow">Tid per sko</div>
-      <div class="shoeStatsList">
-        ${SHOE_OPTIONS.map(s=>{
-          const shoeRuns=state.runs.filter(r=>r.genomfort&&r.shoe===s);
-          const total=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter||0),0);
-          const km=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0),0);
-          return `<div class="shoeStatRow">
-            <span>${esc(s)}</span>
-            <div class="shoeStatValues"><strong>${km.toFixed(1).replace(".",",")} km</strong><strong>${formatDuration(total)}</strong></div>
-          </div>`;
-        }).join("")}
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="eyebrow">Kommande passtyper</div>
-      <div class="typeCards">
-        ${Object.entries(types).map(([k,v])=>`<div class="typeCard"><div class="typeInfo"><span class="typeIcon" style="--type:${TYPE_COLORS[k]||'#bbb'}">${typeIconSvg(k)}</span><div><div class="typeTitle">${k}</div><div class="typeDesc">${TYPE_DESCRIPTIONS[k]||""}</div></div></div><span class="typeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
-      </div>
-    </div>`;
+    <div class="card statChart"><div class="eyebrow">Genomförd volym per vecka</div><div class="statBars">${bars||"<p class='empty'>Ingen historisk data.</p>"}</div></div>
+    <div class="card shoeStatsCard"><div class="eyebrow">Tid och km per sko</div><div class="shoeStatsList">
+      ${SHOE_OPTIONS.map(s=>{const shoeRuns=completed.filter(r=>r.shoe===s);const total=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter||0),0);const km=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0),0);return `<div class="shoeStatRow"><span>${esc(s)}</span><div class="shoeStatValues"><strong>${km.toFixed(1).replace(".",",")} km</strong><strong>${formatDuration(total)}</strong></div></div>`}).join("")}
+    </div></div>
+    <div class="card"><div class="eyebrow">Genomförda passtyper</div><div class="typeCards">
+      ${Object.entries(types).map(([k,v])=>`<div class="typeCard"><div class="typeInfo"><span class="typeIcon" style="--type:${TYPE_COLORS[k]||'#bbb'}">${typeIconSvg(k)}</span><div><div class="typeTitle">${k}</div><div class="typeDesc">${TYPE_DESCRIPTIONS[k]||""}</div></div></div><span class="typeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Ingen historisk data.</p>"}
+    </div></div>`;
+}
+function renderStats(){
+  const view=getOverviewView();
+  renderOverviewTabs(view);
+  renderGoal();
+  renderPlanningStats();
+  renderHistoricalStats();
 }
 
 function showModal(){
@@ -3130,7 +3155,20 @@ function saveGoal(){
   persist();
   toastMsg("Mål sparat som tävling");
 }
-function toggleBackup(){backupBox.style.display=backupBox.style.display==="block"?"none":"block"}
+function toggleBackup(){
+  backupModal.style.display="flex";
+  requestAnimationFrame(()=>{
+    backupModal.style.opacity="1";
+    const sheet=backupModal.querySelector(".sheet");
+    if(sheet) sheet.style.transform="translateY(0)";
+  });
+}
+function closeBackup(){
+  const sheet=backupModal.querySelector(".sheet");
+  if(sheet) sheet.style.transform="translateY(100%)";
+  backupModal.style.opacity="0";
+  setTimeout(()=>{backupModal.style.display="none"},280);
+}
 
 
 function loadJsPdf(){
@@ -3275,8 +3313,30 @@ async function exportSchedulePdf(){
 
 
 function exportData(){
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lopschema-backup.json";a.click();URL.revokeObjectURL(a.href)
+  try{
+    const backup={
+      version:1,
+      exportedAt:new Date().toISOString(),
+      goal:state.goal,
+      runs:state.runs
+    };
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="lopschema-backup.json";
+    a.style.display="none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{
+      a.remove();
+      URL.revokeObjectURL(url);
+    },1000);
+    toastMsg("Backup exporterad");
+  }catch(e){
+    console.error(e);
+    toastMsg("Kunde inte exportera backup");
+  }
 }
 function importData(e){
   const f=e.target.files[0]; if(!f)return;
@@ -3736,6 +3796,79 @@ body.dark .shoeStatRow{border-top-color:rgba(255,255,255,.10)}
 }
 </style>
 
+
+<style>
+ .previousWeekButton{
+  display:block;
+  width:auto;
+  margin:3px auto 5px;
+  padding:4px 7px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--muted);
+  font:inherit;
+  font-size:12px;
+  font-weight:650;
+  line-height:1.2;
+  cursor:pointer;
+}
+.previousWeekButton:active{
+  opacity:.7;
+}
+body.dark .previousWeekButton{
+  color:#AAB8B0;
+}
+</style>
+
+<style>
+.overviewTabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  padding:3px;
+  background:var(--soft);
+  border-radius:11px;
+  margin:10px 0 12px;
+}
+.overviewTab{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:8px;
+  padding:8px 10px;
+  font:inherit;
+  font-size:13px;
+  font-weight:700;
+}
+.overviewTab.active{
+  background:var(--card);
+  color:var(--ink);
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.backupSheet{
+  padding-bottom:10px;
+}
+body.dark .overviewTab.active{
+  background:#203028;
+  color:#F3FAF6;
+  box-shadow:none;
+}
+</style>
+
+<style>
+/* Backup modal uses the same open/close animation as the main sheet. */
+#backupModal{display:none;}
+</style>
+<style>
+/* Show backup content inside its dedicated modal. */
+#backupModal .backupBox{
+  display:block;
+}
+#backupModal .backupHint{
+  margin-top:4px;
+}
+</style>
 </body>
 </html>
 
