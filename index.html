@@ -2793,11 +2793,18 @@ async function saveCloudState(showToast=false){
 }
 
 function go(i){view=i;slider.style.transform=`translateX(-${i*50}%)`}
-document.addEventListener("touchstart",e=>startX=e.touches[0].clientX,{passive:true});
+let pageSwipeStartX=0;
+let pageSwipeTarget=null;
+document.addEventListener("touchstart",e=>{
+  pageSwipeStartX=e.touches[0].clientX;
+  pageSwipeTarget=e.target;
+},{passive:true});
 document.addEventListener("touchend",e=>{
   if(modal.style.display==="flex")return;
-  if(e.target.closest(".runSwipe"))return;
-  let dx=e.changedTouches[0].clientX-startX;
+  // Let horizontally scrollable widgets handle their own swipe.
+  if(pageSwipeTarget?.closest(".historicalStatBars"))return;
+  if(pageSwipeTarget?.closest(".runSwipe"))return;
+  let dx=e.changedTouches[0].clientX-pageSwipeStartX;
   if(Math.abs(dx)>70)go(dx<0?1:0);
 },{passive:true});
 
@@ -2973,7 +2980,7 @@ function renderHistoricalStats(){
       <div class="statMini"><div class="eyebrow">Km</div><div class="statNumber">${sumKm(completed).toFixed(0)} <span class="statUnit">km</span></div><div class="statText">genomförda</div></div>
       <div class="statMini"><div class="eyebrow">Tid</div><div class="statNumber">${(sum(completed,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div><div class="statText">träning</div></div>
     </div>
-    <div class="card statChart"><div class="eyebrow">Genomförd volym per vecka</div><div class="statBars">${bars||"<p class='empty'>Ingen historisk data.</p>"}</div></div>
+    <div class="card statChart"><div class="eyebrow">Genomförd volym per vecka</div><div class="statBars historicalStatBars">${bars||"<p class='empty'>Ingen historisk data.</p>"}</div></div>
     <div class="card shoeStatsCard"><div class="eyebrow">Tid och km per sko</div><div class="shoeStatsList">
       ${SHOE_OPTIONS.map(s=>{const shoeRuns=completed.filter(r=>r.shoe===s);const total=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter||0),0);const km=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0),0);return `<div class="shoeStatRow"><span>${esc(s)}</span><div class="shoeStatValues"><strong>${km.toFixed(1).replace(".",",")} km</strong><strong>${formatDuration(total)}</strong></div></div>`}).join("")}
     </div></div>
@@ -2987,6 +2994,7 @@ function renderStats(){
   renderGoal();
   renderPlanningStats();
   renderHistoricalStats();
+  if(view==="stats") requestAnimationFrame(scrollHistoricalStatsToLatest);
 }
 
 function showModal(){
@@ -3869,6 +3877,34 @@ body.dark .overviewTab.active{
   margin-top:4px;
 }
 </style>
+
+<style>
+/* Historical weekly volume starts at the newest weeks.
+   The data is ordered oldest -> newest, so the newest bars sit on the
+   right. The container itself stays LTR so normal mobile scrolling works. */
+.historicalStatBars{
+  overflow-x:auto;
+  justify-content:flex-start;
+  direction:ltr;
+  scrollbar-width:none;
+  padding-left:16px;
+}
+.historicalStatBars::-webkit-scrollbar{
+  display:none;
+}
+.historicalStatBars > *{
+  direction:ltr;
+}
+</style>
+
+
+<script>
+function scrollHistoricalStatsToLatest(){
+  const el=document.querySelector(".historicalStatBars");
+  if(el) el.scrollLeft=Math.max(0,el.scrollWidth-el.clientWidth);
+}
+</script>
+
 </body>
 </html>
 
