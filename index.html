@@ -2314,6 +2314,7 @@ body.dark .run.strengthRun{
               <button class="actionItem" onclick="toggleBackup();closeActionMenu()">Backup & återställning</button>
               <button class="actionItem" onclick="togglePastWeeks();closeActionMenu()" id="pastWeeksBtn">Visa tidigare veckor</button>
               <button class="actionItem" onclick="toggleEmptyDays();closeActionMenu()" id="emptyDaysBtn">Dölj dagar utan pass</button>
+              <button class="actionItem" onclick="toggleRunMainMetric();closeActionMenu()" id="runMainMetricBtn">Visa <i>tid</i> som primär</button>
               <button class="actionItem themeItem" onclick="toggleDarkMode(event)">
                 <span>Dark mode</span>
                 <span class="switch" aria-hidden="true"></span>
@@ -2396,13 +2397,14 @@ body.dark .run.strengthRun{
     <button id="unlinkGarminBtn" class="textAction danger unlinkGarminBtn" onclick="unlinkGarminFromRun()">Ta bort Garmin-koppling</button>
     <input type="hidden" id="runId">
     <label>Datum</label><input id="date" type="date">
-    <div class="workoutModeToggle"><label><input id="runMode" type="radio" name="workoutMode" checked onchange="updateRunFormFields()"> Löpning</label><label><input id="strengthMode" type="radio" name="workoutMode" onchange="updateRunFormFields()"> Styrketräning</label></div>
+    <div class="workoutModeToggle"><label><input id="runMode" type="radio" name="workoutMode" checked onchange="updateRunFormFields()"> Löpning</label><label><input id="strengthMode" type="radio" name="workoutMode" onchange="updateRunFormFields()"> Styrka</label><label><input id="alternativeMode" type="radio" name="workoutMode" onchange="updateRunFormFields()"> Alternativ</label></div>
     <div id="runTypeField">
       <select id="type"></select>
     </div>
     <div id="strengthTypeField" class="formFieldHidden">
       <select id="strengthType"></select>
     </div>
+    <div id="alternativeTimeField" class="formFieldHidden"><label>Tid min</label><input id="alternativeMins" type="number" inputmode="numeric" min="0" placeholder="T.ex. 45"></div>
     <div class="formGrid" id="runMetricsGrid">
       <div><label>Distans km</label><input id="km" type="number" step=".1" inputmode="decimal"></div>
       <div><label>Tid min</label><input id="mins" type="number" inputmode="numeric"></div>
@@ -2572,38 +2574,56 @@ function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function isStrengthType(t){return ["Helkropp","Push","Pull","Ben"].includes(String(t||"")) || String(t||"").startsWith("Styrka");}
 function isStrengthRun(r){return isStrengthType(r&&r.type);}
 function strengthKind(t){return String(t||"").replace("Styrka – ","");}
+function isAlternativeRun(r){return ["Alternativ","Alternativ träning"].includes(String((r&&r.type)||""));}
 function currentSelectedType(){
+  if(alternativeMode&&alternativeMode.checked) return "Alternativ";
   return strengthMode&&strengthMode.checked ? strengthType.value : type.value;
 }
 function updateRunFormFields(){
   const strength=!!(strengthMode&&strengthMode.checked);
-  if(typeof runTypeField!=="undefined") runTypeField.classList.toggle("formFieldHidden",strength);
+  const alternative=!!(alternativeMode&&alternativeMode.checked);
+  if(typeof runTypeField!=="undefined") runTypeField.classList.toggle("formFieldHidden",strength||alternative);
   if(typeof strengthTypeField!=="undefined") strengthTypeField.classList.toggle("formFieldHidden",!strength);
-  if(typeof runMetricsGrid!=="undefined") runMetricsGrid.classList.toggle("formFieldHidden",strength);
-  if(typeof paceField!=="undefined") paceField.classList.toggle("formFieldHidden",strength);
-  if(strength){
-    km.value="";
-    mins.value="";
-    pace.value="";
-  }
+  if(typeof runMetricsGrid!=="undefined") runMetricsGrid.classList.toggle("formFieldHidden",strength||alternative);
+  if(typeof paceField!=="undefined") paceField.classList.toggle("formFieldHidden",strength||alternative);
+  if(typeof alternativeTimeField!=="undefined") alternativeTimeField.classList.toggle("formFieldHidden",!alternative);
+  if(strength||alternative){km.value="";pace.value="";}
+  if(strength){mins.value="";alternativeMins.value="";}
+  if(!alternative) alternativeMins.value="";
+}
+const RUN_MAIN_METRIC_KEY="runplanner.runMainMetric";
+function getRunMainMetric(){return localStorage.getItem(RUN_MAIN_METRIC_KEY)==="time"?"time":"distance";}
+function toggleRunMainMetric(){
+  localStorage.setItem(RUN_MAIN_METRIC_KEY,getRunMainMetric()==="distance"?"time":"distance");
+  render();
 }
 function runTitle(r){
+  if(isAlternativeRun(r)) return formatDuration(r.tidMinuter||0);
   if(isStrengthRun(r)) return `${strengthKind(r.type)}`;
   const hasGarmin=r.garmin&&r.garmin.distanceKm;
+  if(getRunMainMetric()==="time"){
+    const time=hasGarmin?r.garmin.timeMin:r.tidMinuter;
+    return formatDuration(time||0);
+  }
   return `${hasGarmin?Number(r.garmin.distanceKm).toFixed(2).replace(".",","):r.distansKm} km`;
 }
 
 function activityIconSvg(r){
+  if(isAlternativeRun(r)) return `<span class="activityIcon alternativeActivity" title="Alternativ" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg></span>`;
   return isStrengthRun(r)
     ? `<span class="activityIcon strengthActivity" title="Styrkepass" aria-hidden="true"></span>`
     : `<span class="activityIcon runActivity" title="Löppass" aria-hidden="true"></span>`;
 }
 function runMeta(r){
+  if(isAlternativeRun(r)) return "Alternativ träning";
   if(isStrengthRun(r)) return `Styrka`;
   const hasGarmin=r.garmin&&r.garmin.distanceKm;
   const displayTime=hasGarmin?formatDuration(r.garmin.timeMin):formatDuration(r.tidMinuter);
+  const displayKm=hasGarmin?Number(r.garmin.distanceKm).toFixed(2).replace(".",","):Number(r.distansKm||0).toFixed(2).replace(".",",");
   const displayPace=hasGarmin?r.garmin.pace:r.tempoPerKm;
-  return `${r.type} · ${displayTime} · ${displayPace}/km`;
+  return getRunMainMetric()==="time"
+    ? `${r.type} · ${displayKm} km · ${displayPace}/km`
+    : `${r.type} · ${displayTime} · ${displayPace}/km`;
 }
 
 
@@ -2857,7 +2877,19 @@ function renderSchema(){
   const today=startOfDay(new Date());
   const next=all.find(r=>!r.genomfort && parse(r.date)>=today) || all.find(r=>!r.genomfort);
   schemaSub.textContent=`${all.length} pass · ${sum(all,'distansKm').toFixed(0)} km totalt`;
-  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${isStrengthRun(next)?"Styrka":`${next.distansKm} km`}</div><div class="nextMeta">${isStrengthRun(next)?strengthKind(next.type):`${next.type} · ${formatDuration(next.tidMinuter)} · ${next.tempoPerKm}/km`}</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
+  // Keep the hero's primary metric in sync with the same menu setting as run cards.
+  // Alternative workouts always show duration; running workouts use the selected primary metric.
+  const nextPrimary=next
+    ? (isStrengthRun(next)
+        ? "Styrka"
+        : isAlternativeRun(next)
+          ? formatDuration(next.tidMinuter||0)
+          : getRunMainMetric()==="time"
+            ? formatDuration((next.garmin&&next.garmin.distanceKm)?next.garmin.timeMin:next.tidMinuter||0)
+            : `${(next.garmin&&next.garmin.distanceKm)?Number(next.garmin.distanceKm).toFixed(2).replace(".",","):Number(next.distansKm||0).toFixed(2).replace(".",",")} km`)
+    : "";
+  const nextSecondary=next?(isStrengthRun(next)?strengthKind(next.type):runMeta(next)):"";
+  nextBox.innerHTML=next?`<div class="card hero" onclick="editRun(${next.id})"><div class="eyebrow">${relativeDateText(next.date)}</div><div class="big">${nextPrimary}</div><div class="nextMeta">${nextSecondary}</div>${next.anteckning?`<div class="nextNote">${esc(next.anteckning)}</div>`:""}</div>`:`<div class="card empty">Inga kommande pass.</div>`;
   let currentWeek=startOfWeek(today);
   const earliestDataWeek=all[0]?startOfWeek(parse(all[0].date)):currentWeek;
   const minDate=showPastWeeks
@@ -2880,6 +2912,10 @@ function renderSchema(){
   const emptyBtn=document.getElementById('emptyDaysBtn');
   if(emptyBtn){
     emptyBtn.textContent=showEmptyDays ? 'Dölj dagar utan pass' : 'Visa dagar utan pass';
+  }
+  const runMetricBtn=document.getElementById('runMainMetricBtn');
+  if(runMetricBtn){
+    runMetricBtn.innerHTML=getRunMainMetric()==="distance" ? 'Visa <i>tid</i> som primär' : 'Visa <i>km</i> som primär';
   }
   let html="";
   for(let w=new Date(minDate);w<=maxDate;w=addDays(w,7)){
@@ -2905,7 +2941,7 @@ function runCard(r){
   const activityIcon=activityIconSvg(r);
   return `<div class="runSwipe" data-id="${r.id}">
     <div class="deleteReveal"><button onclick="event.stopPropagation();quickDeleteRun(${r.id})">Ta bort</button></div>
-    <div class="run ${r.genomfort?'done':''} ${isStrengthRun(r)?'strengthRun':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
+    <div class="run ${r.genomfort?'done':''} ${isStrengthRun(r)?'strengthRun':''} ${isAlternativeRun(r)?'alternativeRun':''}" data-run-id="${r.id}" style="--type:${color}" onclick="editRun(${r.id})">
       <div class="runTop">
         <div><span class="runDist">${runTitle(r)}</span></div>
         <div class="runRight">${activityIcon}${garminIcon}<button class="check" onclick="event.stopPropagation();toggleDone(${r.id})">✓</button></div>
@@ -3008,8 +3044,8 @@ function showModal(){
     sheet.style.transform="translateY(0)";
   });
 }
-function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());runMode.checked=true;strengthMode.checked=false;type.value=TYPES[0];strengthType.value=STRENGTH_TYPES[0];km.value="";mins.value="";pace.value="";note.value="";updateRunFormFields();hideGarminEditInfo();moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
-function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Redigera pass";runId.value=r.id;date.value=r.date;runMode.checked=!isStrengthRun(r);strengthMode.checked=isStrengthRun(r);if(isStrengthRun(r)){strengthType.value=r.type}else{type.value=r.type}km.value=isStrengthRun(r)?"":r.distansKm;mins.value=isStrengthRun(r)?"":r.tidMinuter;pace.value=isStrengthRun(r)?"":r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;updateRunFormFields();showGarminEditInfo(r);moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
+function openRun(ds=""){lastEdited=null;sheetTitle.textContent="Nytt pass";runId.value="";date.value=ds||iso(new Date());runMode.checked=true;strengthMode.checked=false;alternativeMode.checked=false;type.value=TYPES[0];strengthType.value=STRENGTH_TYPES[0];km.value="";mins.value="";alternativeMins.value="";pace.value="";note.value="";updateRunFormFields();hideGarminEditInfo();moveBlock.style.display="none";deleteBtn.style.display="none";showModal();setTimeout(()=>date.focus(),100)}
+function editRun(id){let r=state.runs.find(x=>x.id===id);lastEdited=r;sheetTitle.textContent="Redigera pass";runId.value=r.id;date.value=r.date;runMode.checked=!isStrengthRun(r)&&!isAlternativeRun(r);strengthMode.checked=isStrengthRun(r);alternativeMode.checked=isAlternativeRun(r);if(isStrengthRun(r)){strengthType.value=r.type}else if(!isAlternativeRun(r)){type.value=r.type}km.value=(isStrengthRun(r)||isAlternativeRun(r))?"":r.distansKm;mins.value=(isStrengthRun(r)||isAlternativeRun(r))?"":r.tidMinuter;alternativeMins.value=isAlternativeRun(r)?(r.tidMinuter||""):"";pace.value=(isStrengthRun(r)||isAlternativeRun(r))?"":r.tempoPerKm;note.value=r.anteckning;moveDate.value=r.date;updateRunFormFields();showGarminEditInfo(r);moveBlock.style.display="block";deleteBtn.style.display="block";showModal()}
 
 function hideGarminEditInfo(){
   if(typeof garminInfoBox!=="undefined"){
@@ -3055,7 +3091,8 @@ function saveRun(){
   if(!date.value){toastMsg("Välj datum");return}
   const selectedType=currentSelectedType();
   const isStrength=isStrengthType(selectedType);
-  const obj={date:date.value,type:selectedType,distansKm:isStrength?0:Number(km.value||0),tidMinuter:isStrength?0:Number(mins.value||0),tempoPerKm:isStrength?"":(pace.value||paceFrom(Number(km.value),Number(mins.value))),anteckning:note.value,genomfort:lastEdited?lastEdited.genomfort:false};
+  const isAlternative=selectedType==="Alternativ";
+  const obj={date:date.value,type:selectedType,distansKm:(isStrength||isAlternative)?0:Number(km.value||0),tidMinuter:isStrength?0:(isAlternative?Number(alternativeMins.value||0):Number(mins.value||0)),tempoPerKm:(isStrength||isAlternative)?"":(pace.value||paceFrom(Number(km.value),Number(mins.value))),anteckning:note.value,genomfort:lastEdited?lastEdited.genomfort:false};
   if(lastEdited&&lastEdited.garmin) obj.shoe=shoe.value||"";
   if(runId.value){Object.assign(state.runs.find(r=>r.id==runId.value),obj)}else{state.runs.push({...obj,id:Date.now()+Math.random()})}
   closeRun();persist();toastMsg("Sparat")
@@ -3904,6 +3941,39 @@ function scrollHistoricalStatsToLatest(){
   if(el) el.scrollLeft=Math.max(0,el.scrollWidth-el.clientWidth);
 }
 </script>
+
+<style>
+/* v242: alternative workout mode */
+.run.alternativeRun{
+  min-height:48px!important;
+  padding-top:7px!important;
+  padding-bottom:7px!important;
+}
+.run.alternativeRun .runTop{min-height:26px}
+.run.alternativeRun .runDist{
+  font-size:21px!important;
+  letter-spacing:-.45px;
+  display:flex;
+  align-items:center;
+}
+.run.alternativeRun .meta{display:block!important}
+.activityIcon.alternativeActivity{
+  display:inline-grid;
+  place-items:center;
+  width:23px;
+  height:23px;
+  border-radius:7px;
+  background:rgba(85,168,179,.14);
+  color:#3B929D;
+  font-size:17px;
+  font-weight:800;
+  line-height:1;
+}
+body.dark .activityIcon.alternativeActivity{
+  background:rgba(85,168,179,.18);
+  color:#72C5CE;
+}
+</style>
 
 </body>
 </html>
