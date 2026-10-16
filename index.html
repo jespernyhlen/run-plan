@@ -2270,6 +2270,16 @@ body.dark .run.strengthRun{
   overflow:visible!important;
 }
 
+
+.run.strengthRun .smallText{display:block!important;visibility:visible!important;height:auto!important;max-height:none!important;overflow:visible!important;opacity:1!important;white-space:pre-wrap!important}
+.run.strengthRun{height:auto!important;min-height:0!important}
+.volumeChartHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-top:0;padding-right:16px}
+.volumeChartHeading .eyebrow{flex:1;min-width:0;margin:0;line-height:1.25}
+.volumeUnitSwitch{display:inline-flex;align-items:center;gap:2px;padding:3px;margin-top:0;margin-right:0;border-radius:9px;background:var(--soft,rgba(127,127,127,.12));flex:0 0 auto;white-space:nowrap}
+.volumeUnitSwitch button{border:0;background:transparent;color:inherit;border-radius:7px;padding:5px 8px;font:inherit;font-size:12px;line-height:1.2;cursor:pointer;opacity:.72;min-width:38px}
+.volumeUnitSwitch button.active{background:var(--card,#fff);opacity:1;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.statBarValue{white-space:nowrap;left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:none;font-size:11px}
+
 </style>
 <script>
 (function(){
@@ -2456,8 +2466,8 @@ body.dark .run.strengthRun{
 <script>
 const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
 const SHOE_OPTIONS=["Asics GT2000","Craft Nordlite Ultra 2","Mount to Coast H1"];
-const STRENGTH_TYPES=["Helkropp","Push","Pull","Ben"];
-const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Helkropp":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0"};
+const STRENGTH_TYPES=["Löpstyrka","Helkropp","Push","Pull","Ben"];
+const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Helkropp":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0","Löpstyrka":"#7A4FB0"};
 
 const TYPE_ICONS={
   "Distanspass":"shoe",
@@ -2571,7 +2581,7 @@ function sumKm(a){return a.reduce((s,r)=>s+effectiveKm(r),0)}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 
 
-function isStrengthType(t){return ["Helkropp","Push","Pull","Ben"].includes(String(t||"")) || String(t||"").startsWith("Styrka");}
+function isStrengthType(t){return ["Löpstyrka","Helkropp","Push","Pull","Ben"].includes(String(t||"")) || String(t||"").startsWith("Styrka");}
 function isStrengthRun(r){return isStrengthType(r&&r.type);}
 function strengthKind(t){return String(t||"").replace("Styrka – ","");}
 function isAlternativeRun(r){return ["Alternativ","Alternativ träning"].includes(String((r&&r.type)||""));}
@@ -2980,15 +2990,20 @@ function renderGoal(){
   goalName.value=state.goal.name||""; goalDate.value=state.goal.date||"";
   goalKm.value=state.goal.distansKm||""; goalMins.value=state.goal.tidMinuter||""; goalPace.value=state.goal.tempoPerKm||"";
 }
+function setWeeklyVolumeUnit(unit){
+  localStorage.setItem("runplanner.weeklyVolumeUnit",unit);
+  renderStats();
+}
 function renderPlanningStats(){
   const today=startOfDay(new Date());
   const runs=state.runs.filter(r=>!isStrengthRun(r));
   const future=runs.filter(r=>!r.genomfort&&parse(r.date)>=today);
+  const volumeUnit=localStorage.getItem("runplanner.weeklyVolumeUnit")||"km";
   let weekKm={};
-  future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
+  future.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+(volumeUnit==="time"?(Number(r.tidMinuter)||0):effectiveKm(r))});
   let entries=Object.entries(weekKm).sort();
-  let max=Math.max(20,...entries.map(e=>e[1]));
-  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===0?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${i===0?'Nästa':shortDate(k)}</div></div>`).join("");
+  let max=Math.max(volumeUnit==="time"?60:20,...entries.map(e=>e[1]));
+  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===0?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${volumeUnit==="time"?`${Math.floor(v/60)}h${v%60?` ${String(Math.round(v%60)).padStart(2,"0")}m`:""}`:`${Math.round(v)} km`}</span></div></div><div class="statBarLabel">${i===0?'Nästa':shortDate(k)}</div></div>`).join("");
   let types={}; future.forEach(r=>types[r.type]=(types[r.type]||0)+1);
   const next=future[0];
   planningStats.innerHTML=`
@@ -2997,18 +3012,19 @@ function renderPlanningStats(){
       <div class="statMini"><div class="eyebrow">Km</div><div class="statNumber">${sumKm(future).toFixed(0)} <span class="statUnit">km</span></div><div class="statText">kvar</div></div>
       <div class="statMini"><div class="eyebrow">Tid</div><div class="statNumber">${(sum(future,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div><div class="statText">kvar</div></div>
     </div>
-    <div class="card statChart"><div class="eyebrow">Planerad volym per vecka</div><div class="statBars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div></div>
+    <div class="card statChart"><div class="volumeChartHeading"><div class="eyebrow">Planerad volym per vecka</div><div class="volumeUnitSwitch"><button class="${volumeUnit==="km"?"active":""}" onclick="setWeeklyVolumeUnit('km')">km</button><button class="${volumeUnit==="time"?"active":""}" onclick="setWeeklyVolumeUnit('time')">Tid</button></div></div><div class="statBars">${bars||"<p class='empty'>Inga kommande pass.</p>"}</div></div>
     <div class="card"><div class="eyebrow">Kommande passtyper</div><div class="typeCards">
       ${Object.entries(types).map(([k,v])=>`<div class="typeCard"><div class="typeInfo"><span class="typeIcon" style="--type:${TYPE_COLORS[k]||'#bbb'}">${typeIconSvg(k)}</span><div><div class="typeTitle">${k}</div><div class="typeDesc">${TYPE_DESCRIPTIONS[k]||""}</div></div></div><span class="typeCount">${v} pass</span></div>`).join("")||"<p class='empty'>Inga kommande pass.</p>"}
     </div></div>`;
 }
 function renderHistoricalStats(){
   const completed=state.runs.filter(r=>r.genomfort&&!isStrengthRun(r)).sort((a,b)=>a.date.localeCompare(b.date));
+  const volumeUnit=localStorage.getItem("runplanner.weeklyVolumeUnit")||"km";
   let weekKm={};
-  completed.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+effectiveKm(r)});
+  completed.forEach(r=>{let key=iso(startOfWeek(parse(r.date)));weekKm[key]=(weekKm[key]||0)+(volumeUnit==="time"?(Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter)||0):effectiveKm(r))});
   let entries=Object.entries(weekKm).sort();
-  let max=Math.max(20,...entries.map(e=>e[1]));
-  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===entries.length-1?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${Math.round(v)} km</span></div></div><div class="statBarLabel">${shortDate(k)}</div></div>`).join("");
+  let max=Math.max(volumeUnit==="time"?60:20,...entries.map(e=>e[1]));
+  let bars=entries.map(([k,v],i)=>`<div class="statBarItem"><div class="statBarTrack"><div class="statBar ${i===entries.length-1?'current':''}" style="height:${Math.max(10,v/max*104)}px"><span class="statBarValue">${volumeUnit==="time"?`${Math.floor(v/60)}h${v%60?` ${String(Math.round(v%60)).padStart(2,"0")}m`:""}`:`${Math.round(v)} km`}</span></div></div><div class="statBarLabel">${shortDate(k)}</div></div>`).join("");
   let types={}; completed.forEach(r=>types[r.type]=(types[r.type]||0)+1);
   historicalStats.innerHTML=`
     <div class="statsOverview">
@@ -3016,7 +3032,7 @@ function renderHistoricalStats(){
       <div class="statMini"><div class="eyebrow">Km</div><div class="statNumber">${sumKm(completed).toFixed(0)} <span class="statUnit">km</span></div><div class="statText">genomförda</div></div>
       <div class="statMini"><div class="eyebrow">Tid</div><div class="statNumber">${(sum(completed,'tidMinuter')/60).toFixed(1)} <span class="statUnit">h</span></div><div class="statText">träning</div></div>
     </div>
-    <div class="card statChart"><div class="eyebrow">Genomförd volym per vecka</div><div class="statBars historicalStatBars">${bars||"<p class='empty'>Ingen historisk data.</p>"}</div></div>
+    <div class="card statChart"><div class="volumeChartHeading"><div class="eyebrow">Genomförd volym per vecka</div><div class="volumeUnitSwitch"><button class="${volumeUnit==="km"?"active":""}" onclick="setWeeklyVolumeUnit('km')">km</button><button class="${volumeUnit==="time"?"active":""}" onclick="setWeeklyVolumeUnit('time')">Tid</button></div></div><div class="statBars historicalStatBars">${bars||"<p class='empty'>Ingen historisk data.</p>"}</div></div>
     <div class="card shoeStatsCard"><div class="eyebrow">Tid och km per sko</div><div class="shoeStatsList">
       ${SHOE_OPTIONS.map(s=>{const shoeRuns=completed.filter(r=>r.shoe===s);const total=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.timeMin)||r.tidMinuter||0),0);const km=shoeRuns.reduce((sum,r)=>sum+Number((r.garmin&&r.garmin.distanceKm)||r.distansKm||0),0);return `<div class="shoeStatRow"><span>${esc(s)}</span><div class="shoeStatValues"><strong>${km.toFixed(1).replace(".",",")} km</strong><strong>${formatDuration(total)}</strong></div></div>`}).join("")}
     </div></div>
