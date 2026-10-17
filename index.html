@@ -2865,6 +2865,12 @@ function showPreviousWeek(){
   localStorage.setItem("runplanner.previousWeeksShown",String(previousWeeksShown));
   render();
 }
+function hidePreviousWeek(){
+  if(previousWeeksShown<=0)return;
+  previousWeeksShown--;
+  localStorage.setItem("runplanner.previousWeeksShown",String(previousWeeksShown));
+  render();
+}
 function render(){
   type.innerHTML=TYPES.map(t=>`<option>${t}</option>`).join("");
   if(typeof shoe!=="undefined") shoe.innerHTML=`<option value="">Välj skor</option>`+SHOE_OPTIONS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
@@ -2908,8 +2914,9 @@ function renderSchema(){
 
   const previousWeekControl=document.getElementById("previousWeekControl");
   const canShowPreviousWeek=!showPastWeeks && minDate>earliestDataWeek;
-  previousWeekControl.innerHTML=canShowPreviousWeek
-    ? `<button class="previousWeekButton" onclick="showPreviousWeek()">Visa föregående vecka</button>`
+  const canHidePreviousWeek=!showPastWeeks && previousWeeksShown>0;
+  previousWeekControl.innerHTML=(!showPastWeeks && (canShowPreviousWeek || canHidePreviousWeek))
+    ? `${canHidePreviousWeek ? `<button class="previousWeekButton" onclick="hidePreviousWeek()">Dölj föregående vecka</button>` : ""}${canShowPreviousWeek ? `<button class="previousWeekButton" onclick="showPreviousWeek()">Visa föregående vecka</button>` : ""}`
     : "";
 
   let endOfYear=new Date(today.getFullYear(),11,31);
@@ -3859,10 +3866,17 @@ body.dark .shoeStatRow{border-top-color:rgba(255,255,255,.10)}
 
 
 <style>
+ #previousWeekControl{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
  .previousWeekButton{
-  display:block;
+  display:inline-flex;
   width:auto;
-  margin:3px auto 5px;
+  margin:3px 0 5px;
   padding:4px 7px;
   border:0;
   border-radius:7px;
