@@ -1227,6 +1227,15 @@ body.dark .menuSyncIcon{
   box-shadow:0 2px 10px rgba(15,44,42,.04);
 }
 .inlineSyncStatus.show{display:flex}
+.inlineSyncMessage{flex:1;min-width:0}
+.inlineSyncDismiss{margin-left:auto;align-self:flex-start;border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;padding:0 2px;cursor:pointer}
+.inlineSyncStatus.success{background:#e9f8ee;border-color:#9bd5ad}
+.inlineSyncStatus.success .inlineSyncSpinner{display:none}
+.inlineSyncStatus.success .inlineSyncTitle{color:#18733b}
+.inlineSyncStatus.success .inlineSyncText{color:#246b40}
+body.dark .inlineSyncStatus.success{background:rgba(22,112,55,.18);border-color:rgba(86,190,123,.45)}
+body.dark .inlineSyncStatus.success .inlineSyncTitle{color:#7de5a1}
+body.dark .inlineSyncStatus.success .inlineSyncText{color:#a6e8bc}
 .inlineSyncSpinner{
   width:22px;
   height:22px;
@@ -2319,6 +2328,7 @@ body.dark .run.strengthRun{
 
               <div class="menuSectionLabel">Garmin</div>
               <button class="actionItem menuSyncItem" onclick="syncGarmin();closeActionMenu()"><span>Synka Garmin-pass</span><span class="menuSyncIcon">↻</span></button>
+              <button class="actionItem" onclick="exportGarminRuns();closeActionMenu()">Exportera Garmin-pass</button>
               <button class="actionItem" onclick="resetGarminKey();closeActionMenu()">Rensa Garmin API-nyckel</button>
 
               <div class="menuSectionLabel">Inställningar</div>
@@ -2338,10 +2348,11 @@ body.dark .run.strengthRun{
       
       <div id="inlineSyncStatus" class="inlineSyncStatus">
         <div class="inlineSyncSpinner"></div>
-        <div>
+        <div class="inlineSyncMessage">
           <div class="inlineSyncTitle">Synkar Garmin-pass</div>
           <div class="inlineSyncText">Hämtar aktiviteter...</div>
         </div>
+        <button class="inlineSyncDismiss" type="button" aria-label="Stäng banner" onclick="setSyncStatus(false)" title="Stäng">×</button>
       </div>
       <div id="nextBox"></div>
       <div id="previousWeekControl"></div>
@@ -3624,10 +3635,87 @@ function matchGarminRuns(garminRuns){
 
 function setSyncStatus(show){
   const inline=document.getElementById('inlineSyncStatus');
-  if(inline) inline.classList.toggle('show', !!show);
+  if(inline){
+    inline.classList.toggle('show', !!show);
+    inline.classList.remove('success');
+  }
 
   const oldOverlay=document.getElementById('syncStatus');
   if(oldOverlay) oldOverlay.classList.remove('show');
+}
+
+async function exportGarminRuns(){
+  let apiKey=localStorage.getItem("garmin.apiKey")||prompt("Ange din Garmin Sync API-nyckel");
+  if(!apiKey) return;
+
+  localStorage.setItem("garmin.apiKey",apiKey);
+  setSyncStatus(true);
+  const status=document.getElementById('inlineSyncStatus');
+  if(status){
+    const title=status.querySelector('.inlineSyncTitle');
+    const text=status.querySelector('.inlineSyncText');
+    if(title) title.textContent='Exporterar Garmin-pass';
+    if(text) text.textContent='Hämtar aktiviteter...';
+  }
+
+  try{
+    const res=await fetch(GARMIN_SYNC_URL,{
+      method:"GET",
+      headers:{ "x-api-key": apiKey }
+    });
+
+    if(!res.ok){
+      let body="";
+      try{ body=await res.text(); }catch{}
+      if(res.status===401){
+        localStorage.removeItem("garmin.apiKey");
+        throw new Error("401 – fel API-nyckel. Försök igen.");
+      }
+      throw new Error(`${res.status} – backendfel${body?`: ${body.slice(0,120)}`:""}`);
+    }
+
+    const runs=await res.json();
+    if(!Array.isArray(runs) || !runs.length){
+      setSyncStatus(false);
+      toastMsg("Inga Garmin-pass att exportera");
+      return;
+    }
+
+    const columns=["garminId","date","name","distanceKm","durationSeconds","averagePace","averageHeartRate","maxHeartRate","calories","elevationGain"];
+    const escapeCsv=value=>{
+      if(value===null || value===undefined) return "";
+      const text=String(value);
+      return /[\",\r\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text;
+    };
+    const rows=[columns.join(","),...runs.map(run=>columns.map(column=>escapeCsv(run[column])).join(","))];
+    const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download=`garmin-pass-${iso(new Date())}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setSyncStatus(true);
+    const status=document.getElementById('inlineSyncStatus');
+    if(status){
+      status.classList.add('success');
+      const title=status.querySelector('.inlineSyncTitle');
+      const text=status.querySelector('.inlineSyncText');
+      if(title) title.textContent='Nedladdning lyckades';
+      if(text) text.textContent=`${runs.length} Garmin-pass har laddats ned.`;
+    }
+  }catch(e){
+    setSyncStatus(false);
+    console.error(e);
+    const msg=String(e.message||e);
+    if(msg.includes("Failed to fetch") || msg.includes("NetworkError")){
+      toastMsg("CORS/nätverksfel mot backend");
+    }else{
+      toastMsg(msg);
+    }
+  }
 }
 
 async function syncGarmin(){
