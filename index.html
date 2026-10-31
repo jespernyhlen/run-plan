@@ -2511,6 +2511,7 @@ let state=load();
 let showPastWeeks=localStorage.getItem(SHOW_PAST_WEEKS_KEY)==="true";
 let showEmptyDays=localStorage.getItem(SHOW_EMPTY_DAYS_KEY)!=="false";
 let previousWeeksShown=Number(localStorage.getItem("runplanner.previousWeeksShown")||0);
+let additionalWeeksShown=Number(localStorage.getItem("runplanner.additionalWeeksShown")||0);
 let supabaseClient=null;
 let cloudUser=null;
 let cloudLoading=false;
@@ -2872,6 +2873,11 @@ function hidePreviousWeek(){
   localStorage.setItem("runplanner.previousWeeksShown",String(previousWeeksShown));
   render();
 }
+function addAdditionalWeek(){
+  additionalWeeksShown++;
+  localStorage.setItem("runplanner.additionalWeeksShown",String(additionalWeeksShown));
+  render();
+}
 function render(){
   type.innerHTML=TYPES.map(t=>`<option>${t}</option>`).join("");
   if(typeof shoe!=="undefined") shoe.innerHTML=`<option value="">Välj skor</option>`+SHOE_OPTIONS.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
@@ -2921,7 +2927,7 @@ function renderSchema(){
     : "";
 
   let endOfYear=new Date(today.getFullYear(),11,31);
-  let maxDate=startOfWeek(endOfYear);
+  let maxDate=addDays(startOfWeek(endOfYear),7*additionalWeeksShown);
 
   const btn=document.getElementById('pastWeeksBtn');
   if(btn){
@@ -2951,6 +2957,7 @@ function renderSchema(){
     html+=`</div>`;
   }
   weeks.innerHTML=html;
+  weeks.insertAdjacentHTML("beforeend", `<div id="addWeekControl" style="margin-top:12px"><button class="previousWeekButton" onclick="addAdditionalWeek()">Lägg till vecka</button></div>`);
 }
 function runCard(r){
   const color=TYPE_COLORS[r.type]||"#bbb";
@@ -3867,7 +3874,8 @@ body.dark .shoeStatRow{border-top-color:rgba(255,255,255,.10)}
 
 
 <style>
- #previousWeekControl{
+ #previousWeekControl,
+#addWeekControl{
   display:flex;
   align-items:center;
   justify-content:center;
