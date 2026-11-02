@@ -2404,6 +2404,48 @@ body.dark .run.strengthRun{
         <button class="btn secondary" onclick="document.getElementById('importFile').click()">Importera</button>
       </div>
       <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)">
+      <hr style="margin:18px 0;border:0;border-top:1px solid var(--line)">
+      <h3>Importera pass från JSON</h3>
+      <p class="backupHint">Välj datum för det första passet. Övriga pass flyttas med samma antal dagar, så intervallen och veckodagarna bevaras. Importen lägger till passen i ditt befintliga schema.</p>
+      <label for="jsonFirstDate">Datum för första passet</label>
+      <input id="jsonFirstDate" type="date" style="width:100%;box-sizing:border-box;margin:6px 0 14px">
+      <label for="jsonFile">JSON-fil</label>
+      <input id="jsonFile" type="file" accept="application/json,.json" style="width:100%;box-sizing:border-box;margin:6px 0 14px" onchange="loadPassJsonFile(event)">
+      <label for="jsonPassText">Eller klistra in JSON</label>
+      <textarea id="jsonPassText" rows="9" placeholder="Klistra in JSON här…" style="width:100%;box-sizing:border-box;margin:6px 0 14px;font-family:monospace"></textarea>
+      <details style="margin:8px 0 14px"><summary style="font-size:14px;font-weight:800;color:#4e453e;cursor:pointer">Visa exempel på JSON-struktur och hjälptext</summary>
+        <div style="display:flex;justify-content:flex-end;margin:10px 0"><button class="btn secondary" style="display:inline-flex;align-items:center;gap:8px;margin:0" onclick="copyPassJsonExample()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"></rect><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path></svg>Kopiera</button></div>
+        <pre id="jsonPassExample" style="white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface2,#f3f5f3);padding:12px;border-radius:10px;font-size:12px"></pre>
+        <div id="jsonPassHelp" class="backupHint" style="font-style:normal;opacity:1">
+          <p><strong>Hjälp för att skapa JSON från en PDF med träningsschema</strong></p>
+          <p>Skapa ett JSON-objekt med en array <code>passes</code> som innehåller ett objekt per pass.</p>
+          <p><strong>1. Läs av PDF</strong></p>
+          <ul><li>Ta med samtliga pass, även dubbelpass och pass som inte är löpning.</li><li>Använd passets datum som <code>date</code> i formatet <code>YYYY-MM-DD</code>.</li><li>Behåll datumordning och passens relativa mellanrum.</li><li>Hitta inte på uppgifter som saknas i PDF.</li><li>Bevara relevanta instruktioner, teman, syften och detaljer i <code>comment</code>.</li></ul>
+          <p><strong>2. Struktur och kategorier</strong></p>
+          <p>Tillåtna kategorier:</p>
+          <ul><li><code>run</code> (löppass)</li><li><code>strength</code> (styrkepass)</li><li><code>alternative</code> (alternativ träning)</li><li><code>other</code> (Övrigt)</li></ul>
+          <p>Varje pass ska ha:</p><ul><li><code>date</code></li><li><code>category</code></li></ul>
+          <p><code>comment</code> är valfri, och <code>title</code> används ENBART för passtyp <code>other</code>.</p>
+          <p><code>title</code> ska skrivas med stor första bokstav, resterande tecken i gemener.</p>
+          <p><strong>3. Passens typer</strong></p>
+          <p>För styrka ska <code>strengthType</code> användas.</p>
+          <p>Tillåtna värden för <code>strengthType</code>:</p>
+          <ul><li>Löpövningar</li><li>Styrka</li><li>Funktionell styrka</li></ul>
+          <p>För löpning ska <code>runType</code> användas.</p>
+          <p>Tillåtna värden för <code>runType</code>:</p>
+          <ul><li>Distanspass</li><li>Långpass</li></ul>
+          <p><strong>4. Hantering av tid och durationMinutes</strong></p>
+          <p><code>durationMinutes</code> anges i minuter och ska normalt användas för <code>run</code> och <code>alternative</code>.</p>
+          <ul><li>Om PDF anger ett tidsintervall, välj ett rimligt numeriskt värde för <code>durationMinutes</code> där fältet används.</li><li>Bevara det angivna intervallet i kommentaren.</li><li>För kategorin <code>other</code> ska <code>durationMinutes</code> utelämnas.</li><li>För kategorin <code>strength</code> ska <code>durationMinutes</code> också utelämnas och tiden i stället skrivas först i <code>comment</code> (t.ex. <code>15 min. ...</code>), om den inte redan står där.</li></ul>
+          <p><strong>5. Import och datumhantering</strong></p>
+          <p>När JSON-filen importeras flyttas alla pass lika många dagar utifrån valt startdatum. Därför ska datumen i JSON behålla inbördes avstånd.</p>
+          <p>Importen använder textfältets innehåll.</p>
+          <p><strong>6. Output</strong></p>
+          <p>Skriv ut enbart giltig JSON utan Markdown eller text utanför JSON-objektet.</p>
+          <p>Skicka detta som en JSON fil till mig.</p>
+        </div>
+      </details>
+      <button class="btn" style="width:100%" onclick="importPassJson()">Importera JSON-pass</button>
       <button class="textAction danger" onclick="clearAllData()">Rensa all data</button>
     </div>
     <button class="textAction" style="text-align:center" onclick="closeBackup()">Stäng</button>
@@ -2478,8 +2520,8 @@ body.dark .run.strengthRun{
 <script>
 const TYPES=["Distanspass","Intervaller","Tröskelpass","Långpass","Återhämtning","Tävling","Backpass"];
 const SHOE_OPTIONS=["Asics GT2000","Craft Nordlite Ultra 2","Mount to Coast H1"];
-const STRENGTH_TYPES=["Löpstyrka","Helkropp","Push","Pull","Ben"];
-const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Helkropp":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0","Löpstyrka":"#7A4FB0","Övrigt":"#D06B8F"};
+const STRENGTH_TYPES=["Löpstyrka","Löpövningar","Funktionell styrka","Helkropp","Push","Pull","Ben","Styrka"];
+const TYPE_COLORS={"Distanspass":"#3F8F5F","Intervaller":"#4F46E5","Tröskelpass":"#E08A24","Långpass":"#8A6847","Återhämtning":"#55A8B3","Tävling":"#B44A4A","Backpass":"#6E5848","Helkropp":"#7A4FB0","Löpövningar":"#7A4FB0","Funktionell styrka":"#7A4FB0","Push":"#7A4FB0","Pull":"#7A4FB0","Ben":"#7A4FB0","Styrka":"#7A4FB0","Styrka – Helkropp":"#7A4FB0","Styrka – Push":"#7A4FB0","Styrka – Pull":"#7A4FB0","Styrka – Ben":"#7A4FB0","Löpstyrka":"#7A4FB0","Övrigt":"#D06B8F"};
 
 const TYPE_ICONS={
   "Distanspass":"shoe",
@@ -2594,7 +2636,7 @@ function sumKm(a){return a.reduce((s,r)=>s+effectiveKm(r),0)}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 
 
-function isStrengthType(t){return ["Löpstyrka","Helkropp","Push","Pull","Ben"].includes(String(t||"")) || String(t||"").startsWith("Styrka");}
+function isStrengthType(t){return ["Löpstyrka","Löpövningar","Funktionell styrka","Helkropp","Push","Pull","Ben","Styrka"].includes(String(t||"")) || String(t||"").startsWith("Styrka");}
 function isStrengthRun(r){return isStrengthType(r&&r.type);}
 function strengthKind(t){return String(t||"").replace("Styrka – ","");}
 function isAlternativeRun(r){return ["Alternativ","Alternativ träning"].includes(String((r&&r.type)||""));}
@@ -3442,6 +3484,52 @@ async function exportSchedulePdf(){
 }
 
 
+const PASS_JSON_EXAMPLE={passes:[
+  {date:"2026-10-26",category:"other",title:"Reflektion",comment:"Dagbok med reflektioner"},
+  {date:"2026-10-27",category:"run",runType:"Distanspass",durationMinutes:30,comment:"Lätt löpning"},
+  {date:"2026-10-27",category:"strength",strengthType:"Löpstyrka",comment:"10 min. Lätt aktiverande löpövningar"},
+  {date:"2026-10-28",category:"alternative",durationMinutes:60}
+]};
+function initPassJsonExample(){const el=document.getElementById("jsonPassExample");if(el)el.textContent=JSON.stringify(PASS_JSON_EXAMPLE,null,2)}
+async function copyPassJsonExample(){
+  const example=document.getElementById("jsonPassExample")?.textContent||JSON.stringify(PASS_JSON_EXAMPLE,null,2);
+  const help=document.getElementById("jsonPassHelp")?.innerText||"";
+  const text=example+"\n\n"+help.trim();
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text)}
+    else{
+      const temp=document.createElement("textarea");temp.value=text;temp.setAttribute("readonly","");temp.style.position="fixed";temp.style.opacity="0";document.body.appendChild(temp);temp.select();
+      const ok=document.execCommand("copy");temp.remove();if(!ok)throw new Error("copy failed");
+    }
+    toastMsg("JSON-exempel och hjälptext kopierade");
+  }catch(e){toastMsg("Kunde inte kopiera. Markera och kopiera innehållet manuellt.")}
+}
+function loadPassJsonFile(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{document.getElementById("jsonPassText").value=String(reader.result||"")};reader.onerror=()=>toastMsg("Kunde inte läsa filen");reader.readAsText(file)}
+function importPassJson(){
+  const raw=document.getElementById("jsonPassText").value.trim(),firstDate=document.getElementById("jsonFirstDate").value;
+  if(!firstDate){toastMsg("Välj datum för första passet");return}
+  let data;try{data=JSON.parse(raw)}catch(e){toastMsg("JSON-formatet är ogiltigt");return}
+  const passes=Array.isArray(data)?data:data&&data.passes;
+  if(!Array.isArray(passes)||!passes.length){toastMsg("JSON måste innehålla en lista med passes");return}
+  const validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||""))&&!Number.isNaN(new Date(String(v)+"T00:00:00Z").getTime());
+  if(!passes.every(p=>p&&validDate(p.date)&&["run","strength","alternative","other"].includes(p.category))){toastMsg("Kontrollera date och category i JSON");return}
+  if(passes.some(p=>p.category==="other"&&!String(p.title||"").trim())){toastMsg("Pass med category other måste ha title");return}
+  const earliest=passes.map(p=>p.date).sort()[0],baseOld=new Date(earliest+"T00:00:00Z"),baseNew=new Date(firstDate+"T00:00:00Z"),offset=Math.round((baseNew-baseOld)/86400000);
+  const strengthMap={"Löpstyrka":"Löpstyrka","Löpövningar":"Löpövningar","Funktionell styrka":"Funktionell styrka","Helkropp":"Helkropp","Push":"Push","Pull":"Pull","Ben":"Ben","Styrka":"Styrka"};
+  const runMap={"Distanspass":"Distanspass","Intervaller":"Intervaller","Tröskelpass":"Tröskelpass","Långpass":"Långpass","Återhämtning":"Återhämtning","Tävling":"Tävling","Backpass":"Backpass"};
+  let newRuns;try{newRuns=passes.map((p,i)=>{
+    const d=new Date(p.date+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+offset);const date=d.toISOString().slice(0,10),cat=p.category;
+    let type, title;
+    if(cat==="run"){type=runMap[p.runType];if(!type)throw new Error("Ogiltig runType: "+p.runType);title=String(p.title||"").trim();}
+    else if(cat==="strength"){type=strengthMap[p.strengthType];if(!type)throw new Error("Ogiltig strengthType: "+p.strengthType);title=String(p.title||"").trim();}
+    else if(cat==="alternative"){type="Alternativ";title=String(p.title||"").trim();}
+    else {type="Övrigt";title=String(p.title).trim();}
+    const mins=Number(p.durationMinutes||0);if(!Number.isFinite(mins)||mins<0)throw new Error("Ogiltig durationMinutes");
+    const comment=String(p.comment||"");const note=[title&&cat!=="other"?title:null,comment].filter(Boolean).join(" — ");
+    return {id:Date.now()+Math.random()+i,date,type,title:cat==="other"?title:undefined,distansKm:0,tidMinuter:mins,tempoPerKm:"",anteckning:note,genomfort:false};
+  })}catch(e){toastMsg(e.message||"Ogiltigt pass i JSON");return}
+  try{if(!confirm("Importera "+newRuns.length+" pass och lägga till dem i ditt befintliga schema?"))return;state.runs.push(...newRuns);persist();closeBackup();render();toastMsg(newRuns.length+" pass importerade")}catch(e){toastMsg(e.message||"Kunde inte importera passen")}
+}
 function exportData(){
   try{
     const backup={
@@ -3895,6 +3983,7 @@ function toggleDarkMode(event){
 }
 applyTheme();
 
+initPassJsonExample();
 render();
 initSupabase();
 </script>
